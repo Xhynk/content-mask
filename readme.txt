@@ -10,7 +10,11 @@ Link to external content without forwarding users and without setting up domain 
 
 == Description ==
 
-This plugins allows you to embed content on a URL similar to using a Domain Forwarder with Domain Masking. With a simple UI, you can embed or full-page iframe content on any Page, Post, or Custom Post Type's permalink, or you can 301 redirect to it if you're not allowed to embed or download the content. Please confirm you're allowed to utilize and embed the content before you use any particular URL. To alleviate hammering external URLs with cURL requests, when using the Download method - the results are cached via the WordPress Transients API for 4 hours or until the Page, Post, or Custom Post Type is updated. Read More about this plugin here: https://xhynk.com/content-mask/
+[Read More About Content Mask](https://xhynk.com/content-mask/)
+
+This plugins allows you to embed content on a URL similar to using a Domain Forwarder with Domain Masking. With a simple UI, you can embed or full-page iframe content on any Page, Post, or Custom Post Type's permalink, or you can 301 redirect to it if you're not allowed to embed or download the content. Please confirm you're allowed to utilize and embed the content before you use any particular URL. To alleviate hammering external URLs with cURL requests, when using the Download method - the results are cached via the WordPress Transients API for 4 hours or until the Page, Post, or Custom Post Type is updated.
+
+[Read More About Content Mask](https://xhynk.com/content-mask/)
 
 == Screenshots ==
 
