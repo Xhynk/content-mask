@@ -3,12 +3,18 @@
 	* Plugin Name: Content Mask
 	* Plugin URI: http://xhynk.com/content-mask/
 	* Description: Embed external content into your site without complicated Domain Forwarding and Domain Masks.
-	* Version: 1.1.1
+	* Version: 1.1.2
 	* Author: Alex Demchak
 	* Author URI: github.com/xhynk
 */
 
 class ContentMask {
+	public static $content_mask_methods = array(
+		'download',
+		'iframe',
+		'redirect'
+	);
+
 	public function __construct() {
 		add_action( 'admin_head', array( $this, 'admin_js' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_css' ) );
@@ -168,9 +174,10 @@ class ContentMask {
 			<label>
 				<strong style="margin-bottom: 6px; display: inline-block;">Content Mask Method:</strong>
 				<select class="widefat" name="content_mask_method">
-					<option <?php if( $content_mask_method == 'download' ){ echo 'selected="selected"'; } ?> value="download">Download</option>
-					<option <?php if( $content_mask_method == 'iframe' ){ echo 'selected="selected"'; } ?> value="iframe">Iframe</option>
-					<option <?php if( $content_mask_method == 'redirect' ){ echo 'selected="selected"'; } ?> value="redirect">Redirect (301)</option>
+					<?php foreach( $this::$content_mask_methods as $method ){
+						$selected = $content_mask_method === $method ? 'selected="selected"' : '';
+						echo '<option value="'. $method .'" '. $selected .'>'. ucwords( $method ) .'</option>';
+					} ?>
 				</select>
 			</label>
 		</div>
@@ -257,7 +264,7 @@ class ContentMask {
 
 		// Content Mask Method - Should be 1 of 3 values, otherwise set it back to empty/false
 		if( isset( $content_mask_method ) )
-			update_post_meta( $post_id, 'content_mask_method', $this->sanitize_select( $content_mask_method, array( 'download', 'iframe', 'redirect' ) ) );
+			update_post_meta( $post_id, 'content_mask_method', $this->sanitize_select( $content_mask_method, $this::$content_mask_methods ) );
 
 		// Content Mask Enable - Being tricky to unset, so we update it always and just set it to true/false based on whether or not it was empty
 		update_post_meta( $post_id, 'content_mask_enable', $this->sanitize_checkbox( $content_mask_enable ) );

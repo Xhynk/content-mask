@@ -3,7 +3,7 @@ Contributors: Alex Demchak
 Tags: Domain Mask, Content Mask, URL Mask
 Requires at least: 3.5.1
 Tested up to: 4.9.1
-Stable tag: 1.1.1
+Stable tag: 1.1.2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 Link to external content without forwarding users and without setting up domain forwards with domain masks.
@@ -21,6 +21,9 @@ This plugins allows you to embed content on a URL similar to using a Domain Forw
 1. Enable the Content Mask, place the Content Mask URL (the URL of the content you want to embed), and choose the Content Mask Method (Download, Iframe, or Redirect (301)).
 
 == Changelog ==
+= 1.1.2 =
+* Made Content Mask Method an array to allow for easier updating/additions in the future
+
 = 1.1.1 =
 * Provided better URL validation on the front end
 
