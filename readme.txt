@@ -3,7 +3,7 @@ Contributors: Alex Demchak
 Tags: Domain Mask, Content Mask, URL Mask
 Requires at least: 3.5.1
 Tested up to: 4.9.1
-Stable tag: 1.1.3
+Stable tag: 1.1.4
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 Link to external content without forwarding users and without setting up domain forwards with domain masks.
@@ -21,6 +21,9 @@ This plugins allows you to embed content on a URL similar to using a Domain Forw
 1. Enable the Content Mask, place the Content Mask URL (the URL of the content you want to embed), and choose the Content Mask Method (Download, Iframe, or Redirect (301)).
 
 == Changelog ==
+= 1.1.4 =
+* If other (namely really large) metaboxes were hooked in, Content Mask Settings were hard to see. Moved inline CSS and JS to separate files and improved the design of the metabox to make it stand out much more when buried deeply in the admin.
+
 = 1.1.3 =
 * Elegant Theme's "Bloom" was interfering and still being hooked. It's now been forcefully unhooked on Content Mask pages (regardless of content displayed)
 

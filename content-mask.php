@@ -3,7 +3,7 @@
 	* Plugin Name: Content Mask
 	* Plugin URI: http://xhynk.com/content-mask/
 	* Description: Embed external content into your site without complicated Domain Forwarding and Domain Masks.
-	* Version: 1.1.3
+	* Version: 1.1.4
 	* Author: Alex Demchak
 	* Author URI: github.com/xhynk
 */
@@ -21,6 +21,7 @@ class ContentMask {
 		add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ), 1, 2 );
 		add_action( 'save_post', array( $this, 'save_meta' ), 10, 1 );
 		add_action( 'template_redirect', array( $this, 'process_page_request' ), 1, 2 );
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
 
 		// Elegant Theme's Bloom is being a turd, needs to be unhooked on Content Mask pages.
 		add_action( 'wp', function(){
@@ -36,6 +37,17 @@ class ContentMask {
 		}, 11 );
 	}
 
+	public function enqueue_admin_assets( $hook ){
+		if( $hook == 'post.php' || $hook = 'post-new.php' ){
+			// Scripts
+			wp_enqueue_script( 'content-mask-admin', plugins_url( '/assets/admin.js', __FILE__ ), array( 'jquery' ), '1.0', true );
+
+			// Styles
+			wp_enqueue_style( 'simple-line-icons', 'https://cdnjs.cloudflare.com/ajax/libs/simple-line-icons/2.3.2/css/simple-line-icons.min.css' );
+			wp_enqueue_style( 'content-mask-admin', plugins_url( '/assets/admin.css', __FILE__ ) );
+		}
+	}
+
 	public function validate_url( $url ){
 		## Make sure this is a URL we're showing
 		$url = filter_var( esc_url( $url ), FILTER_SANITIZE_URL );
@@ -49,7 +61,7 @@ class ContentMask {
 
 	public function get_page_content( $url ){
 		## Download the Content Mask URL into the page content, overriding everything.
-		
+
 		// Make sure we're still displaying an actual URL
 		if( $this->validate_url( $url ) === true ){
 			// Cache the results in a transient to prevent hammering the host URL
@@ -112,7 +124,7 @@ class ContentMask {
 
 	public function show_post( $post_id ){
 		$url = esc_url( get_post_meta( $post_id, 'content_mask_url', true ) );
-		
+
 		if( $this->validate_url( $url ) === true ){
 			$method = sanitize_text_field( get_post_meta( $post_id, 'content_mask_method', true ) );
 
@@ -174,30 +186,44 @@ class ContentMask {
 		foreach( get_post_custom() as $key => $val ){
 			${$key} = $val[0];
 		} ?>
-		<div style="width: 50px; float: left; margin-right: 12px;">
-			<label class="cm_toggle_switch" for="content_mask_enable">
-				<strong style="margin-bottom: 6px; display: inline-block;">&nbsp;</strong>
-				<input type="checkbox" name="content_mask_enable" id="content_mask_enable" <?php if( filter_var( $content_mask_enable, FILTER_VALIDATE_BOOLEAN ) ){ echo 'checked="checked"'; } ?> /><span class="cm_toggle_indicator"></span>
-			</label>
+		<div class="cm_override">
+			<div class="cm-enable-container">
+				<label class="cm_checkbox" for="content_mask_enable">
+					<span aria-label="Enable Content Mask"></span>
+					<input type="checkbox" name="content_mask_enable" id="content_mask_enable" <?php if( filter_var( $content_mask_enable, FILTER_VALIDATE_BOOLEAN ) ){ echo 'checked="checked"'; } ?> />
+					<span class="cm_check">
+						<svg class="icon" aria-hidden="true" data-fa-processed="" data-prefix="fas" data-icon="check" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206 0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204 0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204 0l36.203 36.204c9.997 9.997 9.997 26.206 0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"></path></svg>
+					</span>
+				</label>
+			</div>
+			<div class="cm-method-container">
+				<div class="cm_select">
+					<input type="radio" name="content_mask_method" class="cm_select_toggle">
+					<i class="toggle icon icon-arrow-down"></i>
+					<i class="toggle icon icon-arrow-up"></i>
+					<span class="placeholder">Choose a Method...</span>
+					<label class="option">
+						<input type="radio" <?php if( $content_mask_method === 'download' ) { echo 'checked="checked"'; } ?> value="download" name="content_mask_method">
+						<span class="title"><i class="icon icon-cloud-download"></i>Download</span>
+					</label>
+					<label class="option">
+						<input type="radio" <?php if( $content_mask_method === 'iframe' ) { echo 'checked="checked"'; } ?> value="iframe" name="content_mask_method">
+						<span class="title"><i class="icon icon-frame"></i>Iframe</span>
+					</label>
+					<label class="option">
+						<input type="radio" <?php if( $content_mask_method === 'redirect' ) { echo 'checked="checked"'; } ?> value="redirect" name="content_mask_method">
+						<span class="title"><i class="icon icon-share-alt"></i>Redirect (301)</span>
+					</label>
+				</div>
+			</div>
+			<div class="cm-url-container">
+				<div class="cm_text hide-overflow">
+					<span aria-label="Content Mask URL"></span>
+					<input type="text" class="widefat" name="content_mask_url" id="content_mask_url" placeholder="Content Mask URL" value="<?php echo esc_url( $content_mask_url ); ?>" />
+				</div>
+			</div>
+			<div style="clear: both; height: 24px;"></div>
 		</div>
-		<div style="width: calc( 50% - 6px ); float: left; margin-right: 12px;">
-			<label>
-				<strong style="margin-bottom: 6px; display: inline-block;">Content Mask URL:</strong>
-				<input type="text" class="widefat" name="content_mask_url" id="content_mask_url" value="<?php echo esc_url( $content_mask_url ); ?>" />
-			</label>
-		</div>
-		<div style="width: calc( 25% - 6px ); float: left;">
-			<label>
-				<strong style="margin-bottom: 6px; display: inline-block;">Content Mask Method:</strong>
-				<select class="widefat" name="content_mask_method">
-					<?php foreach( $this::$content_mask_methods as $method ){
-						$selected = $content_mask_method === $method ? 'selected="selected"' : '';
-						echo '<option value="'. $method .'" '. $selected .'>'. ucwords( $method ) .'</option>';
-					} ?>
-				</select>
-			</label>
-		</div>
-		<div style="clear: both; height: 24px;"></div>
 	<?php }
 
 	public function add_meta_boxes(){
@@ -221,7 +247,7 @@ class ContentMask {
 			if( !strpos( $input_url, '.' ) ){
 				return false;
 			}
-		
+
 			if( substr( $input_url, 0, 4) == 'http' && filter_var( $input_url, FILTER_VALIDATE_URL ) ){
 				// It should be a valid URL with a good protocol
 				return $input_url;
@@ -237,7 +263,7 @@ class ContentMask {
 		if( isset( $input ) ){
 			// Not Empty, Sanitize It
 			$input = sanitize_text_field( $input );
-		
+
 			if( in_array( $input, $valid_values ) ){
 				// It's an expected value and wasn't manually added
 				return $input;
@@ -287,137 +313,6 @@ class ContentMask {
 
 		// Delete the cached 'download' copy any time this Page, Post or Custom Post Type is updated.
 		delete_transient( 'content_mask-'. strtolower( preg_replace( "/[^a-z0-9]/", '', $content_mask_url ) ) );
-	}
-
-	public function admin_js(){
-		echo '<script type="text/javascript">
-			jQuery(document).ready(function($){
-				if( $("#content_mask_enable").is(":checked") ){
-					$("#postdivrich").css({"height":0,"overflow":"hidden"}).addClass("hide-overflow");
-				}
-
-				$("#content_mask_enable").click(function(){
-					if( $(this).is(":checked") ){
-						$("#postdivrich").animate({"height":0,"overflow":"hidden"}).addClass("hide-overflow");
-					} else {
-						$("#postdivrich").animate({"height":437,"overflow":"visible"}).removeClass("hide-overflow");
-					}
-				});
-			});
-		</script>';
-	}
-
-	public function admin_css(){
-		echo '<style>
-			.hide-overflow {
-				overflow: hidden !important;
-			}
-
-			.cm_toggle_switch {
-				clear: both;
-				width: 100%;
-				display: block;
-				margin-bottom: 15px;
-			}
-
-			.cm_toggle_switch > input {
-				display: none !important;
-				width: 0;
-				height: 0;
-				overflow: hidden;
-			}
-
-			.cm_toggle_switch > input:checked ~ .cm_toggle_indicator {
-				color: #fff;
-				background-color: #0074d9;
-			}
-
-			.cm_toggle_switch > input:active ~ .cm_toggle_indicator {
-				color: #fff;
-				background-color: #84c6ff;
-			}
-
-			.cm_toggle_indicator {
-				position: absolute;
-				top: 2px;
-				left: 0;
-				display: block;
-				width: 1rem;
-				height: 1rem;
-				font-size: 65%;
-				line-height: 1rem;
-				color: #eee;
-				text-align: center;
-				-webkit-user-select: none;
-				   -moz-user-select: none;
-					-ms-user-select: none;
-						user-select: none;
-				background-color: #eee;
-				background-repeat: no-repeat;
-				background-position: center center;
-				background-size: 50% 50%;
-			}
-
-			.cm_toggle_switch .cm_toggle_indicator {
-				border-radius: 20px;
-			}
-
-			.cm_toggle_indicator:hover {
-				transition: .25s all ease-out;
-				background-color: rgba(0, 153, 213,.25);
-			}
-
-			.cm_toggle_switch input:checked ~ .cm_toggle_indicator {
-				background-position: left center;
-				background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAxNy4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiA2LjAwIEJ1aWxkIDApICAtLT4NCjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+DQo8c3ZnIHZlcnNpb249IjEuMSIgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4Ig0KCSB2aWV3Qm94PSIwIDAgOCA4IiBlbmFibGUtYmFja2dyb3VuZD0ibmV3IDAgMCA4IDgiIHhtbDpzcGFjZT0icHJlc2VydmUiPg0KPHBhdGggZmlsbD0iI0ZGRkZGRiIgZD0iTTYuNCwxTDUuNywxLjdMMi45LDQuNUwyLjEsMy43TDEuNCwzTDAsNC40bDAuNywwLjdsMS41LDEuNWwwLjcsMC43bDAuNy0wLjdsMy41LTMuNWwwLjctMC43TDYuNCwxTDYuNCwxeiINCgkvPg0KPC9zdmc+DQo=);
-			}
-
-			.cm_toggle_switch input:indeterminate ~ .cm_toggle_indicator {
-				background-color: #0074d9;
-				background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAxNy4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiA2LjAwIEJ1aWxkIDApICAtLT4NCjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+DQo8c3ZnIHZlcnNpb249IjEuMSIgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4Ig0KCSB3aWR0aD0iOHB4IiBoZWlnaHQ9IjhweCIgdmlld0JveD0iMCAwIDggOCIgZW5hYmxlLWJhY2tncm91bmQ9Im5ldyAwIDAgOCA4IiB4bWw6c3BhY2U9InByZXNlcnZlIj4NCjxwYXRoIGZpbGw9IiNGRkZGRkYiIGQ9Ik0wLDN2Mmg4VjNIMHoiLz4NCjwvc3ZnPg0K);
-			}
-
-			.cm_toggle_indicator {
-				width: 38px;
-				height: 18px;
-				display: inline-block;
-				float: left;
-				position: relative;
-				transition: .25s background ease-out;
-				top: 5px;
-				border: none;
-				box-shadow: inset 0 2px 2px rgba(0,0,0,.25);
-			}
-
-			.cm_toggle_switch input:checked ~ .cm_toggle_indicator {
-				background-color: #0099d5;
-				width: 38px;
-				height: 18px;
-			}
-
-			.cm_toggle_switch input:checked ~ .cm_toggle_indicator:before {
-				left: 0;
-				transform: translateX(20px);
-			}
-
-			.cm_toggle_indicator:before {
-				transition: .25s all ease-out;
-				content: "=";
-				background: #fff;
-				width: 16px;
-				height: 16px;
-				padding: 2px;
-				position: absolute;
-				left: -2px;
-				top: -2px;
-				border-radius: 20px;
-				border: 1px solid #bbb;
-				background: #fff;
-				color: #999;
-				font-size: 10px;
-				line-height: initial;
-			}
-		</style>';
 	}
 }
 
