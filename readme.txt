@@ -3,7 +3,7 @@ Contributors: Alex Demchak
 Tags: Domain Mask, Content Mask, URL Mask
 Requires at least: 3.5.1
 Tested up to: 4.9.1
-Stable tag: 1.1.4
+Stable tag: 1.1.4.1
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 Link to external content without forwarding users and without setting up domain forwards with domain masks.
