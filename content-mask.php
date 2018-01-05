@@ -3,7 +3,7 @@
 	* Plugin Name: Content Mask
 	* Plugin URI: http://xhynk.com/content-mask/
 	* Description: Embed external content into your site without complicated Domain Forwarding and Domain Masks.
-	* Version: 1.1.2
+	* Version: 1.1.3
 	* Author: Alex Demchak
 	* Author URI: github.com/xhynk
 */
@@ -21,6 +21,19 @@ class ContentMask {
 		add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ), 1, 2 );
 		add_action( 'save_post', array( $this, 'save_meta' ), 10, 1 );
 		add_action( 'template_redirect', array( $this, 'process_page_request' ), 1, 2 );
+
+		// Elegant Theme's Bloom is being a turd, needs to be unhooked on Content Mask pages.
+		add_action( 'wp', function(){
+			global $et_bloom;
+
+			foreach( get_post_custom() as $key => $val )
+				${$key} = $val[0];
+
+			if( filter_var( $content_mask_enable, FILTER_VALIDATE_BOOLEAN ) ){
+				remove_action( 'wp_footer', array( $et_bloom, 'display_flyin' ) );
+				remove_action( 'wp_footer', array( $et_bloom, 'display_popup' ) );
+			}
+		}, 11 );
 	}
 
 	public function validate_url( $url ){
@@ -113,6 +126,9 @@ class ContentMask {
 				// Default to Download
 				echo $this->get_page_content( $url );
 			}
+
+			exit();
+
 		} else {
 			die( 'Content Mask URL is invalid' );
 		}
@@ -405,4 +421,6 @@ class ContentMask {
 	}
 }
 
-$cm = new ContentMask();
+add_action( 'plugins_loaded', function(){
+	$cm = new ContentMask();
+});
