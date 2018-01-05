@@ -3,11 +3,10 @@
 	* Plugin Name: Content Mask
 	* Plugin URI: http://xhynk.com/content-mask/
 	* Description: Embed external content into your site without complicated Domain Forwarding and Domain Masks.
-	* Version: 1.1.4
+	* Version: 1.1.4.1
 	* Author: Alex Demchak
 	* Author URI: github.com/xhynk
 */
-
 class ContentMask {
 	public static $content_mask_methods = array(
 		'download',
@@ -95,6 +94,14 @@ class ContentMask {
 		if( $this->validate_url( $url ) === true ){
 			if( has_site_icon() ) $favicon = '<link class="wp_favicon" href="'. get_site_icon_url() .'" rel="shortcut icon"/>';
 
+			/* If a URL doesn't have a protocol, we force http:// on it since not all
+			 * sites will be secured, but many secure sites forward to https://. HOWEVER
+			 * insecure iframes won't get displayed on secured sites. So we force change
+			 * it to https:// - if it doesn't show up then it wouldn't have shown up any-
+			 * ways due to being insecure. Don't do this for the `download` method.
+			 */
+			$url = is_ssl() ? str_replace( 'http://', 'https://', esc_url( $url ) ) : esc_url( $url );
+
 			return '<!DOCTYPE html>
 				<head>
 					'.$favicon.'
@@ -113,7 +120,7 @@ class ContentMask {
 				</head>
 				<body>
 					<script type="text/javascript" src="'. plugin_dir_url( __FILE__ ) .'js/update_meta_tags.js"></script>
-					<iframe width="100%" height="100%" src="'. esc_url( $url ) .'" frameborder="0" allowfullscreen></iframe>
+					<iframe width="100%" height="100%" src="'. $url .'" frameborder="0" allowfullscreen></iframe>
 				</body>
 			</html>';
 		} else {

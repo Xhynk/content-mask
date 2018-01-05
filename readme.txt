@@ -21,6 +21,9 @@ This plugins allows you to embed content on a URL similar to using a Domain Forw
 1. Enable the Content Mask, place the Content Mask URL (the URL of the content you want to embed), and choose the Content Mask Method (Download, Iframe, or Redirect (301)).
 
 == Changelog ==
+= 1.1.4.1 =
+* Content Mask URL's without a protocol have `http://` added to them, since not all sites are secure yet. However, if your site is secure, it won't display `http://` iframes. Iframe method now checks if your site is secured with ssl, and if so force updates the Content Mask URL's protocol to `https://`. If the content still is blank, it's because the iframe'd site is insecure and wouldn't show up either way. 
+
 = 1.1.4 =
 * If other (namely really large) metaboxes were hooked in, Content Mask Settings were hard to see. Moved inline CSS and JS to separate files and improved the design of the metabox to make it stand out much more when buried deeply in the admin.
 
