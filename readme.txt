@@ -6,7 +6,7 @@ Tested up to: 4.9.1
 Stable tag: 1.1.4.1
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Link to external content without forwarding users and without setting up domain forwards with domain masks.
+Embed or link to external content on any Page, Post, or Custom Post Type without the need to use complicated domain forwarding or domain masks.
 
 == Description ==
 
