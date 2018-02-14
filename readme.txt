@@ -2,8 +2,8 @@
 Contributors: Alex Demchak
 Tags: Domain Mask, Content Mask, URL Mask
 Requires at least: 3.5.1
-Tested up to: 4.9.1
-Stable tag: 1.1.4.1
+Tested up to: 4.9.3
+Stable tag: 1.1.4.2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 Embed or link to external content on any Page, Post, or Custom Post Type without the need to use complicated domain forwarding or domain masks.
@@ -21,6 +21,9 @@ This plugins allows you to embed content on a URL similar to using a Domain Forw
 1. Enable the Content Mask, place the Content Mask URL (the URL of the content you want to embed), and choose the Content Mask Method (Download, Iframe, or Redirect (301)).
 
 == Changelog ==
+= 1.1.4.2 =
+* Forgot to remove class methods that were no longer in use, which triggered E_NOTICE errors in some sites.
+
 = 1.1.4.1 =
 * Content Mask URL's without a protocol have `http://` added to them, since not all sites are secure yet. However, if your site is secure, it won't display `http://` iframes. Iframe method now checks if your site is secured with ssl, and if so force updates the Content Mask URL's protocol to `https://`. If the content still is blank, it's because the iframe'd site is insecure and wouldn't show up either way. 
 
