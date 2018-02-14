@@ -3,9 +3,9 @@
 	* Plugin Name: Content Mask
 	* Plugin URI: http://xhynk.com/content-mask/
 	* Description: Embed external content into your site without complicated Domain Forwarding and Domain Masks.
-	* Version: 1.1.4.1
+	* Version: 1.1.4.2
 	* Author: Alex Demchak
-	* Author URI: github.com/xhynk
+	* Author URI: https://github.com/xhynk
 */
 class ContentMask {
 	public static $content_mask_methods = array(
@@ -15,8 +15,6 @@ class ContentMask {
 	);
 
 	public function __construct() {
-		add_action( 'admin_head', array( $this, 'admin_js' ) );
-		add_action( 'admin_enqueue_scripts', array( $this, 'admin_css' ) );
 		add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ), 1, 2 );
 		add_action( 'save_post', array( $this, 'save_meta' ), 10, 1 );
 		add_action( 'template_redirect', array( $this, 'process_page_request' ), 1, 2 );
@@ -26,8 +24,7 @@ class ContentMask {
 		add_action( 'wp', function(){
 			global $et_bloom;
 
-			foreach( get_post_custom() as $key => $val )
-				${$key} = $val[0];
+			foreach( get_post_custom() as $key => $val ) ${$key} = $val[0];
 
 			if( filter_var( $content_mask_enable, FILTER_VALIDATE_BOOLEAN ) ){
 				remove_action( 'wp_footer', array( $et_bloom, 'display_flyin' ) );
