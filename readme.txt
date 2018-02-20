@@ -1,7 +1,7 @@
 === Content Mask ===
 Contributors: Alex Demchak
-Tags: Domain Mask, Content Mask, URL Mask
-Requires at least: 3.5.1
+Tags: Domain Mask, Content Mask, URL Mask, Embed, 301 Redirect, Redirect
+Requires at least: 3.5.1
 Tested up to: 4.9.4
 Stable tag: 1.2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
