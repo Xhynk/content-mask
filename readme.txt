@@ -1,8 +1,10 @@
 === Content Mask ===
-Contributors: Alex Demchak
-Tags: Domain Mask, Content Mask, URL Mask, Embed, 301 Redirect, Redirect
-Requires at least: 3.5.1
-Tested up to: 4.9.4
+Contributors: Alex Demchak
+Author URI: https://github.com/Xhynk
+Plugin URL: https://xhynk.com/content-mask/
+Tags: Domain Mask, Content Mask, URL Mask, Embed, Redirect, 301, 301 Redirect, Iframe
+Requires at Least: 3.5.1
+Tested Up To: 4.9.4
 Stable tag: 1.2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
