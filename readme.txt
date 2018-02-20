@@ -38,7 +38,9 @@ Notes:
 
 == Screenshots ==
 
-1. Enable the Content Mask, place the Content Mask URL (the URL of the content you want to embed), and choose the Content Mask Method (Download, Iframe, or Redirect (301)).
+1. Enable the Content Mask, set the Content Mask URL (the URL of the content you want to embed), and choose the Content Mask Method (Download, Iframe, or Redirect (301)).
+2. See a list of all of the Content Masked pages, as well as their settings. Quickly enable/disable with a single click. Limited to posts/pages the current user can edit.
+3. Notice the URL hasn't changed at all using the download or iframe method, but the content is 100% replaced on the front end with the Content Mask URL's content.
 
 == Changelog ==
 
