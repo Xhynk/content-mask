@@ -3,7 +3,7 @@
 	* Plugin Name: Content Mask
 	* Plugin URI: http://xhynk.com/content-mask/
 	* Description: Embed external content into your site without complicated Domain Forwarding and Domain Masks.
-	* Version: 1.1.4.2
+	* Version: 1.2
 	* Author: Alex Demchak
 	* Author URI: https://github.com/xhynk
 */
@@ -14,34 +14,177 @@ class ContentMask {
 		'redirect'
 	);
 
-	public function __construct() {
+	public function __construct(){
 		add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ), 1, 2 );
 		add_action( 'save_post', array( $this, 'save_meta' ), 10, 1 );
 		add_action( 'template_redirect', array( $this, 'process_page_request' ), 1, 2 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'global_admin_assets' ) );
+		add_action( 'admin_menu', array( $this, 'add_overview_menu' ) );
+		add_action( 'wp_ajax_toggle_content_mask', array( $this, 'toggle_content_mask' ) );
 
 		// Elegant Theme's Bloom is being a turd, needs to be unhooked on Content Mask pages.
 		add_action( 'wp', function(){
-			global $et_bloom;
+			if( !is_admin() ){
+				global $et_bloom;
 
-			foreach( get_post_custom() as $key => $val ) ${$key} = $val[0];
+				foreach( get_post_custom() as $key => $val ) ${$key} = $val[0];
 
-			if( filter_var( $content_mask_enable, FILTER_VALIDATE_BOOLEAN ) ){
-				remove_action( 'wp_footer', array( $et_bloom, 'display_flyin' ) );
-				remove_action( 'wp_footer', array( $et_bloom, 'display_popup' ) );
+				if( filter_var( $content_mask_enable, FILTER_VALIDATE_BOOLEAN ) ){
+					remove_action( 'wp_footer', array( $et_bloom, 'display_flyin' ) );
+					remove_action( 'wp_footer', array( $et_bloom, 'display_popup' ) );
+				}
 			}
 		}, 11 );
 	}
 
+	public function issetor(&$var, $default = false) {
+		return isset($var) ? $var : $default;
+	}
+
+	public function add_overview_menu(){
+		add_menu_page(
+			'Content Mask',
+			'Content Mask',
+			'edit_posts',
+			'content-mask',
+			array( $this, 'admin_overview' ),
+			plugins_url( 'content-mask/assets/icon-solid.png' )
+		);
+	}
+
+	public function admin_overview(){
+		if( !current_user_can( 'edit_posts' ) ){
+			wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
+		} else {
+			$args = array(
+				'post_status' => array( 'publish', 'draft', 'pending', 'privatex' ),
+				'post_type'   => get_post_types( '', 'names' ),
+				'meta_query'  => array(
+					array(
+						'key'     => 'content_mask_url',
+						'value'   => '',
+						'compare' => '!=',
+					),
+				),
+			);
+
+			if( !current_user_can( 'edit_others_posts' ) ){
+				$args['perm'] = 'editable';
+			}
+
+			$query = new WP_Query( $args );
+		?>
+			<div class="wrap">
+				<h2>Content Mask</h2>
+				<div class="content-mask-admin-table">
+					<div class="content-mask-admin-table-header"></div>
+					<div class="content-mask-admin-table-body">
+						<table cellspacing="0">
+							<thead>
+								<tr>
+									<th class="method"><div>Method</div></th>
+									<th class="title"><div>Title</div></th>
+									<th class="url"><div>Mask URL</div></th>
+									<th class="post-type"><div>Post Type</div></th>
+									<th class="edit"><div>Edit</div></th>
+									<th class="view"><div>View</div></th>
+								</tr>
+								<tr class="invisible">
+									<th>Method</th>
+									<th>Title</th>
+									<th>Mask URL</th>
+									<th>Post Type</th>
+									<th>Edit</th>
+									<th>View</th>
+								</tr>
+							</thead>
+							<tbody>
+								<?php if( $query->have_posts() ){ ?>
+									<?php while( $query->have_posts() ){ ?>
+										<?php
+											$query->the_post();
+											$enabled = filter_var( $this->issetor( get_post_meta( get_the_ID(), 'content_mask_enable', true ) ), FILTER_VALIDATE_BOOLEAN ) ? 'enabled' : 'disabled'
+										?>
+										<tr data-attr-id="<?php echo get_the_ID(); ?>" data-attr-state="<?php echo $enabled; ?>" class="<?php echo $enabled; ?>">
+											<td class="method"><div><?php
+												$content_mask_method = $this->issetor( get_post_meta( get_the_ID(), 'content_mask_method', true ) );
+												if( $content_mask_method === 'download' ) { echo '<i title="Download" class="icon icon-cloud-download"></i>'; }
+												else if( $content_mask_method === 'iframe' ) { echo '<i title="Iframe" class="icon icon-frame"></i>'; }
+												else if( $content_mask_method === 'redirect' ) { echo '<i title="Redirect (301)" class="icon icon-share-alt"></i>'; }
+											?></div></td>
+											<td class="title"><div><?php echo get_the_title(); ?></div></td>
+											<td class="url"><div><?php echo $this->issetor( get_post_meta( get_the_ID(), 'content_mask_url', true ) ); ?></div></td>
+											<td class="post-type"><div data-post-status="<?php echo get_post_status(); ?>"><?php echo get_post_type(); ?></div></td>
+											<td class="edit"><div><a class="wp-core-ui button" href="<?php echo get_edit_post_link(); ?>">Edit</a></div></td>
+											<td class="view"><div><a target="_blank" class="wp-core-ui button-primary" href="<?php echo get_permalink(); ?>">View</a></div></td>
+										</tr>
+									<?php } ?>
+								<?php } else { ?>
+									<tr>
+										<td><div>No Content Masks Found</div></td>
+									</tr>
+								<?php } ?>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		<?php }
+	}
+
 	public function enqueue_admin_assets( $hook ){
-		if( $hook == 'post.php' || $hook = 'post-new.php' ){
+		$hook_array = array(
+			'post.php',
+			'post-new.php',
+			'toplevel_page_content-mask',
+		);
+
+		if( in_array( $hook, $hook_array ) ){
 			// Scripts
-			wp_enqueue_script( 'content-mask-admin', plugins_url( '/assets/admin.js', __FILE__ ), array( 'jquery' ), '1.0', true );
+			wp_enqueue_script( 'content-mask-admin', plugins_url( '/assets/admin.min.js', __FILE__ ), array( 'jquery' ), '1.0', true );
 
 			// Styles
 			wp_enqueue_style( 'simple-line-icons', 'https://cdnjs.cloudflare.com/ajax/libs/simple-line-icons/2.3.2/css/simple-line-icons.min.css' );
-			wp_enqueue_style( 'content-mask-admin', plugins_url( '/assets/admin.css', __FILE__ ) );
+			wp_enqueue_style( 'content-mask-admin', plugins_url( '/assets/admin.min.css', __FILE__ ) );
 		}
+	}
+
+	public function global_admin_assets(){
+		echo '<style>
+			#adminmenu #toplevel_page_content-mask img { padding: 0; }
+			#adminmenu #toplevel_page_content-mask .current img { opacity: 1; }
+		</style>';
+	}
+
+	public function toggle_content_mask() {
+		foreach( $_POST as $key => $val ) ${$key} = $val;
+		$response = array();
+
+		if( $newState == 'enabled' ){
+			$_newState     = true;
+			$_currentState = false;
+		} else if( $newState == 'disabled' ){
+			$_newState     = false;
+			$_currentState = true;
+		} else {
+			$response['status']  = 403;
+			$response['message'] = 'Unauthorized values detected';
+
+			echo json_encode( $response );
+			wp_die();
+		}
+
+		if( update_post_meta( $postID, 'content_mask_enable', $_newState, $_currentState ) ){
+			$response['status']  = 200;
+			$response['message'] = 'Content Mask for <strong>'.get_the_title( $postID ) .'</strong> has been <strong>'. $newState .'</strong>';
+		} else {
+			$response['status']  = 400;
+			$response['message'] = 'Request failed.';
+		}
+
+		echo json_encode( $response );
+		wp_die();
 	}
 
 	public function validate_url( $url ){
@@ -50,6 +193,21 @@ class ContentMask {
 
 		if( !filter_var( $url, FILTER_VALIDATE_URL ) === false ){
 			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public function replace_relative_urls( $url, $str, $protocol_relative = true ){
+		## Relative URLs were being awful with the `download` method, especially with form actions.
+
+		if( $this->validate_url( $url ) ){
+			$url = ( $protocol_relative === true ) ? str_replace( array( 'http://', 'https://' ), '//', $url ) : $url;
+			$url = ( substr( $url, -1 ) === '/' ) ? substr( $url, 0, -1 ) : $url;
+
+			// Regex developed: https://regex101.com/r/AwnWuS/1
+			// From StackOverflow Q/A: https://stackoverflow.com/questions/48836281/replace-all-relative-urls-with-absolute-urls/
+			return preg_replace('~(?:src|action|href)=[\'"]\K/(?!/)[^\'"]*~', "$url$0", $str);
 		} else {
 			return false;
 		}
@@ -64,15 +222,8 @@ class ContentMask {
 			$transient_name = 'content_mask-'. strtolower( preg_replace( "/[^a-z0-9]/", '', $url ) );
 
 			if( false === ( $transient = get_transient( $transient_name ) ) ){
-				$cookie_array	= array();
-
-				foreach( $_COOKIE as $key => $val ){
-					if( $key != 'Array' ){
-						$cookie_array[] = $key . '=' . $val;
-					}
-				}
-
-				$body = wp_remote_retrieve_body( wp_remote_get( $url, array( 'cookies' => $cookie_array ) ) );
+				$body = wp_remote_retrieve_body( wp_remote_get( $url ) );
+				$body = $this->replace_relative_urls( $url, $body );
 
 				set_transient( $transient_name, $body, 14400 );
 
@@ -91,11 +242,12 @@ class ContentMask {
 		if( $this->validate_url( $url ) === true ){
 			if( has_site_icon() ) $favicon = '<link class="wp_favicon" href="'. get_site_icon_url() .'" rel="shortcut icon"/>';
 
-			/* If a URL doesn't have a protocol, we force http:// on it since not all
+			/**
+			 * If a URL doesn't have a protocol, we force http:// on it since not all
 			 * sites will be secured, but many secure sites forward to https://. HOWEVER
 			 * insecure iframes won't get displayed on secured sites. So we force change
 			 * it to https:// - if it doesn't show up then it wouldn't have shown up any-
-			 * ways due to being insecure. Don't do this for the `download` method.
+			 * ways due to being insecure.
 			 */
 			$url = is_ssl() ? str_replace( 'http://', 'https://', esc_url( $url ) ) : esc_url( $url );
 
@@ -116,7 +268,6 @@ class ContentMask {
 					<meta name="viewport" content="width=device-width, initial-scale=1">
 				</head>
 				<body>
-					<script type="text/javascript" src="'. plugin_dir_url( __FILE__ ) .'js/update_meta_tags.js"></script>
 					<iframe width="100%" height="100%" src="'. $url .'" frameborder="0" allowfullscreen></iframe>
 				</body>
 			</html>';
@@ -134,9 +285,9 @@ class ContentMask {
 
 			if( $method === 'download' ){
 				echo $this->get_page_content( $url );
-			} elseif( $method === 'iframe' ){
+			} else if( $method === 'iframe' ){
 				echo $this->get_page_iframe( $url );
-			} elseif( $method === 'redirect' ){
+			} else if( $method === 'redirect' ){
 				wp_redirect( $url, 301 );
 			} else {
 				// Default to Download
@@ -189,7 +340,12 @@ class ContentMask {
 	public function content_mask_meta_box(){
 		foreach( get_post_custom() as $key => $val ){
 			${$key} = $val[0];
-		} ?>
+		}
+
+		$this->issetor( $content_mask_url, '' );
+		$this->issetor( $content_mask_enable, '' );
+		$this->issetor( $content_mask_method, '' );
+		?>
 		<div class="cm_override">
 			<div class="cm-enable-container">
 				<label class="cm_checkbox" for="content_mask_enable">
@@ -252,7 +408,7 @@ class ContentMask {
 				return false;
 			}
 
-			if( substr( $input_url, 0, 4) == 'http' && filter_var( $input_url, FILTER_VALIDATE_URL ) ){
+			if( substr( $input_url, 0, 4) === 'http' && filter_var( $input_url, FILTER_VALIDATE_URL ) ){
 				// It should be a valid URL with a good protocol
 				return $input_url;
 			} else {
