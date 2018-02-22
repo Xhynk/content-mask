@@ -1,13 +1,17 @@
 <?php
 /**
-	* Plugin Name: Content Mask
-	* Plugin URI: http://xhynk.com/content-mask/
-	* Description: Embed external content into your site without complicated Domain Forwarding and Domain Masks.
-	* Version: 1.2.0.1
-	* Author: Alex Demchak
-	* Author URI: https://github.com/xhynk
+	* Plugin Name:	Content Mask
+	* Plugin URI:	http://xhynk.com/content-mask/
+	* Description:	Easily embed external content into your website without complicated Domain Forwarders, Domain Masks, APIs or Scripts
+	* Version:		1.2.0.2
+	* Author:		Alex Demchak
+	* Author URI:	https://github.com/xhynk
 */
+
 class ContentMask {
+	public static $label	= 'Content Mask';
+	public static $lc_label	= 'content-mask';
+
 	public static $content_mask_methods = array(
 		'download',
 		'iframe',
@@ -15,19 +19,18 @@ class ContentMask {
 	);
 
 	public function __construct(){
-		add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ), 1, 2 );
 		add_action( 'save_post', array( $this, 'save_meta' ), 10, 1 );
+		add_action( 'admin_menu', array( $this, 'add_overview_menu' ) );
+		add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ), 1, 2 );
 		add_action( 'template_redirect', array( $this, 'process_page_request' ), 1, 2 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'global_admin_assets' ) );
-		add_action( 'admin_menu', array( $this, 'add_overview_menu' ) );
 		add_action( 'wp_ajax_toggle_content_mask', array( $this, 'toggle_content_mask' ) );
 
-		// Elegant Theme's Bloom is being a turd, needs to be unhooked on Content Mask pages.
+		// Elegant Theme's "Bloom" isn't playing nicely and is being hooked below Download and Iframe content
 		add_action( 'wp', function(){
 			if( !is_admin() ){
 				global $et_bloom;
-
 				$content_mask_enable = get_post_meta( $post->ID, 'content_mask_enable', true );
 
 				if( filter_var( $content_mask_enable, FILTER_VALIDATE_BOOLEAN ) ){
@@ -38,18 +41,18 @@ class ContentMask {
 		}, 11 );
 	}
 
-	public function issetor(&$var, $default = false) {
-		return isset($var) ? $var : $default;
+	public function issetor( &$var, $default = false ){
+		return isset( $var ) ? $var : $default;
 	}
 
 	public function add_overview_menu(){
 		add_menu_page(
-			'Content Mask',
-			'Content Mask',
+			$this::$label,
+			$this::$label,
 			'edit_posts',
-			'content-mask',
+			$this::$lc_label,
 			array( $this, 'admin_overview' ),
-			plugins_url( 'content-mask/assets/icon-solid.png' )
+			plugins_url( "{$this::$lc_label}/assets/icon-solid.png" )
 		);
 	}
 
@@ -76,10 +79,10 @@ class ContentMask {
 			$query = new WP_Query( $args );
 		?>
 			<div class="wrap">
-				<h2>Content Mask</h2>
-				<div class="content-mask-admin-table">
-					<div class="content-mask-admin-table-header"></div>
-					<div class="content-mask-admin-table-body">
+				<h2><?php echo $this::$label; ?></h2>
+				<div class="<?php echo $this::$lc_label; ?>-admin-table">
+					<div class="<?php echo $this::$lc_label; ?>-admin-table-header"></div>
+					<div class="<?php echo $this::$lc_label; ?>-admin-table-body">
 						<table cellspacing="0">
 							<thead>
 								<tr>
@@ -122,7 +125,7 @@ class ContentMask {
 									<?php } ?>
 								<?php } else { ?>
 									<tr>
-										<td><div>No Content Masks Found</div></td>
+										<td><div>No <?php echo $this::$label; ?>s Found</div></td>
 									</tr>
 								<?php } ?>
 							</tbody>
@@ -137,24 +140,24 @@ class ContentMask {
 		$hook_array = array(
 			'post.php',
 			'post-new.php',
-			'toplevel_page_content-mask',
+			"toplevel_page_{$this::$lc_label}",
 		);
 
 		if( in_array( $hook, $hook_array ) ){
 			// Scripts
-			wp_enqueue_script( 'content-mask-admin', plugins_url( '/assets/admin.min.js', __FILE__ ), array( 'jquery' ), '1.0', true );
+			wp_enqueue_script( "{$this::$lc_label}-admin", plugins_url( '/assets/admin.min.js', __FILE__ ), array( 'jquery' ), '1.0', true );
 
 			// Styles
 			wp_enqueue_style( 'simple-line-icons', 'https://cdnjs.cloudflare.com/ajax/libs/simple-line-icons/2.3.2/css/simple-line-icons.min.css' );
-			wp_enqueue_style( 'content-mask-admin', plugins_url( '/assets/admin.min.css', __FILE__ ) );
+			wp_enqueue_style( "{$this::$lc_label}-admin", plugins_url( '/assets/admin.min.css', __FILE__ ) );
 		}
 	}
 
 	public function global_admin_assets(){
-		echo '<style>
-			#adminmenu #toplevel_page_content-mask img { padding: 0; }
-			#adminmenu #toplevel_page_content-mask .current img { opacity: 1; }
-		</style>';
+		echo "<style>
+			#adminmenu #toplevel_page_{$this::$lc_label} img { padding: 0; }
+			#adminmenu #toplevel_page_{$this::$lc_label} .current img { opacity: 1; }
+		</style>";
 	}
 
 	public function toggle_content_mask() {
@@ -177,7 +180,7 @@ class ContentMask {
 
 		if( update_post_meta( $postID, 'content_mask_enable', $_newState, $_currentState ) ){
 			$response['status']  = 200;
-			$response['message'] = 'Content Mask for <strong>'.get_the_title( $postID ) .'</strong> has been <strong>'. $newState .'</strong>';
+			$response['message'] = $this::$label. ' for <strong>'. get_the_title( $postID ) .'</strong> has been <strong>'. $newState .'</strong>';
 		} else {
 			$response['status']  = 400;
 			$response['message'] = 'Request failed.';
@@ -297,7 +300,7 @@ class ContentMask {
 			exit();
 
 		} else {
-			die( 'Content Mask URL is invalid' );
+			wp_die( "{$this::$label} URL is invalid" );
 		}
 
 		exit(); // Too far!
@@ -327,7 +330,7 @@ class ContentMask {
 						foreach( get_post_custom() as $key => $val )
 							${$key} = $val[0];
 
-						echo '<div style="border-left: 4px solid #c00; box-shadow: 0 5px 12px -4px rgba(0,0,0,.5); background: #fff; padding: 12px 24px; z-index: 16777271; position: fixed; top: 42px; left: 10px; right: 10px; border-">It looks like you have enabled a Content Mask on this post, but don\'t have a valid URL. <a style="display: inline-block; text-decoration: none; font-size: 13px; line-height: 26px; height: 28px; margin: 0; padding: 0 10px 1px; cursor: pointer; border-width: 1px; border-style: solid; -webkit-appearance: none; border-radius: 3px; white-space: nowrap; box-sizing: border-box; background: #0085ba; border-color: #0073aa #006799 #006799; box-shadow: 0 1px 0 #006799; color: #fff; text-decoration: none; text-shadow: 0 -1px 1px #006799, 1px 0 1px #006799, 0 1px 1px #006799, -1px 0 1px #006799; float: right;" class="wp-core-ui button primary" href="'. get_edit_post_link() .'#content_mask_url">Edit Content Mask</a></div>';
+						echo '<div style="border-left: 4px solid #c00; box-shadow: 0 5px 12px -4px rgba(0,0,0,.5); background: #fff; padding: 12px 24px; z-index: 16777271; position: fixed; top: 42px; left: 10px; right: 10px;">It looks like you have enabled a '. $this::$label .' on this post, but don\'t have a valid URL. <a style="display: inline-block; text-decoration: none; font-size: 13px; line-height: 26px; height: 28px; margin: 0; padding: 0 10px 1px; cursor: pointer; border-width: 1px; border-style: solid; -webkit-appearance: none; border-radius: 3px; white-space: nowrap; box-sizing: border-box; background: #0085ba; border-color: #0073aa #006799 #006799; box-shadow: 0 1px 0 #006799; color: #fff; text-decoration: none; text-shadow: 0 -1px 1px #006799, 1px 0 1px #006799, 0 1px 1px #006799, -1px 0 1px #006799; float: right;" class="wp-core-ui button primary" href="'. get_edit_post_link() .'#content_mask_url">Edit '. $this::$label .'</a></div>';
 					}
 				} );
 
@@ -352,7 +355,7 @@ class ContentMask {
 		<div class="cm_override">
 			<div class="cm-enable-container">
 				<label class="cm_checkbox" for="content_mask_enable">
-					<span aria-label="Enable Content Mask"></span>
+					<span aria-label="Enable <?php echo $this::$label; ?>"></span>
 					<input type="checkbox" name="content_mask_enable" id="content_mask_enable" <?php if( filter_var( $content_mask_enable, FILTER_VALIDATE_BOOLEAN ) ){ echo 'checked="checked"'; } ?> />
 					<span class="cm_check">
 						<svg class="icon" aria-hidden="true" data-fa-processed="" data-prefix="fas" data-icon="check" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206 0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204 0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204 0l36.203 36.204c9.997 9.997 9.997 26.206 0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"></path></svg>
@@ -381,8 +384,8 @@ class ContentMask {
 			</div>
 			<div class="cm-url-container">
 				<div class="cm_text hide-overflow">
-					<span aria-label="Content Mask URL"></span>
-					<input type="text" class="widefat" name="content_mask_url" id="content_mask_url" placeholder="Content Mask URL" value="<?php echo esc_url( $content_mask_url ); ?>" />
+					<span aria-label="<?php echo $this::$label; ?> URL"></span>
+					<input type="text" class="widefat" name="content_mask_url" id="content_mask_url" placeholder="<?php echo $this::$label; ?> URL" value="<?php echo esc_url( $content_mask_url ); ?>" />
 				</div>
 			</div>
 			<div style="clear: both; height: 24px;"></div>
@@ -390,7 +393,7 @@ class ContentMask {
 	<?php }
 
 	public function add_meta_boxes(){
-		add_meta_box( 'content_mask_meta_box', 'Content Mask Settings', array( $this, 'content_mask_meta_box' ), null, 'normal', 'high' );
+		add_meta_box( 'content_mask_meta_box', "{$this::$label} Settings", array( $this, 'content_mask_meta_box' ), null, 'normal', 'high' );
 	}
 
 	public function sanitize_url( $input_url ){
