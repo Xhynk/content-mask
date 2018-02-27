@@ -3,12 +3,14 @@
 	* Plugin Name:	Content Mask
 	* Plugin URI:	http://xhynk.com/content-mask/
 	* Description:	Easily embed external content into your website without complicated Domain Forwarders, Domain Masks, APIs or Scripts
-	* Version:		1.2.0.2
+	* Version:		1.2.1
 	* Author:		Alex Demchak
 	* Author URI:	https://github.com/xhynk
 */
 
 class ContentMask {
+	private static $instance;
+
 	public static $label	= 'Content Mask';
 	public static $lc_label	= 'content-mask';
 
@@ -17,6 +19,13 @@ class ContentMask {
 		'iframe',
 		'redirect'
 	);
+
+	public static function get_instance() {
+		if( null == self::$instance ){
+			self::$instance = new ContentMask();
+		}
+		return self::$instance;
+	}
 
 	public function __construct(){
 		add_action( 'save_post', array( $this, 'save_meta' ), 10, 1 );
@@ -191,25 +200,16 @@ class ContentMask {
 	}
 
 	public function validate_url( $url ){
-		## Make sure this is a URL we're showing
 		$url = filter_var( esc_url( $url ), FILTER_SANITIZE_URL );
 
-		if( !filter_var( $url, FILTER_VALIDATE_URL ) === false ){
-			return true;
-		} else {
-			return false;
-		}
+		return !filter_var( $url, FILTER_VALIDATE_URL ) === false ? true : false;
 	}
 
 	public function replace_relative_urls( $url, $str, $protocol_relative = true ){
-		## Relative URLs were being awful with the `download` method, especially with form actions.
-
 		if( $this->validate_url( $url ) ){
 			$url = ( $protocol_relative === true ) ? str_replace( array( 'http://', 'https://' ), '//', $url ) : $url;
 			$url = ( substr( $url, -1 ) === '/' ) ? substr( $url, 0, -1 ) : $url;
 
-			// Regex developed: https://regex101.com/r/AwnWuS/1
-			// From StackOverflow Q/A: https://stackoverflow.com/questions/48836281/replace-all-relative-urls-with-absolute-urls/
 			return preg_replace('~(?:src|action|href)=[\'"]\K/(?!/)[^\'"]*~', "$url$0", $str);
 		} else {
 			return false;
@@ -218,10 +218,7 @@ class ContentMask {
 
 	public function get_page_content( $url ){
 		## Download the Content Mask URL into the page content, overriding everything.
-
-		// Make sure we're still displaying an actual URL
 		if( $this->validate_url( $url ) === true ){
-			// Cache the results in a transient to prevent hammering the host URL
 			$transient_name = 'content_mask-'. strtolower( preg_replace( "/[^a-z0-9]/", '', $url ) );
 
 			if( false === ( $transient = get_transient( $transient_name ) ) ){
@@ -298,7 +295,6 @@ class ContentMask {
 			}
 
 			exit();
-
 		} else {
 			wp_die( "{$this::$label} URL is invalid" );
 		}
@@ -309,6 +305,9 @@ class ContentMask {
 	public function process_page_request() {
 		## Let's see if we should do anything about this page request
 		global $post;
+
+		// Not singular, don't display (such as archive pages, post lists, etc. )
+		if( !is_singular() ) return;
 
 		// 404 has no custom fields
 		if( is_404() ) return;
@@ -482,6 +481,4 @@ class ContentMask {
 	}
 }
 
-add_action( 'plugins_loaded', function(){
-	$cm = new ContentMask();
-});
+add_action( 'plugins_loaded', array( 'ContentMask', 'get_instance' ) );

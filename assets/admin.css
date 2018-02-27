@@ -69,39 +69,15 @@
 }
 
 .cm_checkbox input:checked + .cm_check {
-	animation: check .5s cubic-bezier(0.895, 0.030, 0.685, 0.220) forwards;
+	animation: content_mask_check .5s cubic-bezier(0.895, 0.030, 0.685, 0.220) forwards;
+	background: #00d478;
 }
 
 .cm_checkbox input:checked + .cm_check .icon {
 	opacity: 1;
-	transform: translate3d( -50%, -50%, 0 ) scale(0);
+	transform: translate3d( -50%, -50%, 0 ) scale(1);
 	color: #fff;
-	animation: icon .3s cubic-bezier(1.000, 0.008, 0.565, 1.650) .1s 1 forwards;
-}
-
-@keyframes icon {
-	from {
-		opacity: 0;
-		transform: translate3d( -50%, -50%, 0 ) scale(0.3);
-	}
-	to {
-		opacity: 1;
-		transform: translate3d( -50%, -50%, 0 ) scale(1)
-	}
-}
-
-@keyframes check {
-	from {
-		width: 52px;
-		height: 52px;
-		border: 2px solid #fff;
-	}
-	to {
-		width: 52px;
-		height: 52px;
-		border: 2px solid #FFF;
-		background: #00d478;
-	}
+	animation: content_mask_icon .3s cubic-bezier(1.000, 0.008, 0.565, 1.650) .1s 1 forwards;
 }
 
 /* Text Area */
@@ -410,7 +386,7 @@
 }
 
 .content-mask-admin-table table td.method i.icon-reload {
-	animation: 1s cm-reload linear infinite;
+	animation: 1s content_mask_reload linear infinite;
 	background-color: #0078d4 !important;
 }
 
@@ -422,11 +398,38 @@
 	padding-right: 16px;
 }
 
-@keyframes cm-reload {
+/* Animations */
+@keyframes content_mask_reload {
 	from {
 		transform: rotate(0deg);
 	}
 	to {
 		transform: rotate(-360deg);
+	}
+}
+
+@keyframes content_mask_icon {
+	from {
+		opacity: 0;
+		transform: translate3d( -50%, -50%, 0 ) scale(0.3);
+	}
+	to {
+		opacity: 1;
+		transform: translate3d( -50%, -50%, 0 ) scale(1)
+	}
+}
+
+@keyframes content_mask_check {
+	from {
+		width: 52px;
+		height: 52px;
+		border: 2px solid #fff;
+		background: #fff;
+	}
+	to {
+		width: 52px;
+		height: 52px;
+		border: 2px solid #FFF;
+		background: #00d478;
 	}
 }
