@@ -3,7 +3,7 @@
 	* Plugin Name:	Content Mask
 	* Plugin URI:	http://xhynk.com/content-mask/
 	* Description:	Easily embed external content into your website without complicated Domain Forwarders, Domain Masks, APIs or Scripts
-	* Version:		1.2.1
+	* Version:		1.2.2
 	* Author:		Alex Demchak
 	* Author URI:	https://github.com/xhynk
 */
@@ -39,7 +39,7 @@ class ContentMask {
 		// Elegant Theme's "Bloom" isn't playing nicely and is being hooked below Download and Iframe content
 		add_action( 'wp', function(){
 			if( !is_admin() ){
-				global $et_bloom;
+				global $et_bloom, $post;
 				$content_mask_enable = get_post_meta( $post->ID, 'content_mask_enable', true );
 
 				if( filter_var( $content_mask_enable, FILTER_VALIDATE_BOOLEAN ) ){
@@ -88,10 +88,10 @@ class ContentMask {
 			$query = new WP_Query( $args );
 		?>
 			<div class="wrap">
-				<h2><?php echo $this::$label; ?></h2>
-				<div class="<?php echo $this::$lc_label; ?>-admin-table">
-					<div class="<?php echo $this::$lc_label; ?>-admin-table-header"></div>
-					<div class="<?php echo $this::$lc_label; ?>-admin-table-body">
+				<h2><?= $this::$label; ?></h2>
+				<div class="<?= $this::$lc_label; ?>-admin-table">
+					<div class="<?= $this::$lc_label; ?>-admin-table-header"></div>
+					<div class="<?= $this::$lc_label; ?>-admin-table-body">
 						<table cellspacing="0">
 							<thead>
 								<tr>
@@ -118,23 +118,23 @@ class ContentMask {
 											$query->the_post();
 											$enabled = filter_var( $this->issetor( get_post_meta( get_the_ID(), 'content_mask_enable', true ) ), FILTER_VALIDATE_BOOLEAN ) ? 'enabled' : 'disabled'
 										?>
-										<tr data-attr-id="<?php echo get_the_ID(); ?>" data-attr-state="<?php echo $enabled; ?>" class="<?php echo $enabled; ?>">
+										<tr data-attr-id="<?= get_the_ID(); ?>" data-attr-state="<?= $enabled; ?>" class="<?= $enabled; ?>">
 											<td class="method"><div><?php
 												$content_mask_method = $this->issetor( get_post_meta( get_the_ID(), 'content_mask_method', true ) );
-												if( $content_mask_method === 'download' ) { echo '<i title="Download" class="icon icon-cloud-download"></i>'; }
-												else if( $content_mask_method === 'iframe' ) { echo '<i title="Iframe" class="icon icon-frame"></i>'; }
-												else if( $content_mask_method === 'redirect' ) { echo '<i title="Redirect (301)" class="icon icon-share-alt"></i>'; }
+												if( $content_mask_method === 'download' ) { echo $this->display_svg( 'download', 'icon', 'title="Download"' ); }
+												else if( $content_mask_method === 'iframe' ) { echo $this->display_svg( 'iframe', 'icon', 'title="Iframe"' ); }
+												else if( $content_mask_method === 'redirect' ) { echo $this->display_svg( 'redirect', 'icon', 'title="Redirect (301)"' ); }
 											?></div></td>
-											<td class="title"><div><?php echo get_the_title(); ?></div></td>
-											<td class="url"><div><?php echo $this->issetor( get_post_meta( get_the_ID(), 'content_mask_url', true ) ); ?></div></td>
-											<td class="post-type"><div data-post-status="<?php echo get_post_status(); ?>"><?php echo get_post_type(); ?></div></td>
-											<td class="edit"><div><a class="wp-core-ui button" href="<?php echo get_edit_post_link(); ?>">Edit</a></div></td>
-											<td class="view"><div><a target="_blank" class="wp-core-ui button-primary" href="<?php echo get_permalink(); ?>">View</a></div></td>
+											<td class="title"><div><?= get_the_title(); ?></div></td>
+											<td class="url"><div><?= $this->issetor( get_post_meta( get_the_ID(), 'content_mask_url', true ) ); ?></div></td>
+											<td class="post-type"><div data-post-status="<?= get_post_status(); ?>"><?= get_post_type(); ?></div></td>
+											<td class="edit"><div><a class="wp-core-ui button" href="<?= get_edit_post_link(); ?>">Edit</a></div></td>
+											<td class="view"><div><a target="_blank" class="wp-core-ui button-primary" href="<?= get_permalink(); ?>">View</a></div></td>
 										</tr>
 									<?php } ?>
 								<?php } else { ?>
 									<tr>
-										<td><div>No <?php echo $this::$label; ?>s Found</div></td>
+										<td><div>No <?= $this::$label; ?>s Found</div></td>
 									</tr>
 								<?php } ?>
 							</tbody>
@@ -153,12 +153,13 @@ class ContentMask {
 		);
 
 		if( in_array( $hook, $hook_array ) ){
+			$assets_dir = plugins_url( '/assets', __FILE__ );
+
 			// Scripts
-			wp_enqueue_script( "{$this::$lc_label}-admin", plugins_url( '/assets/admin.min.js', __FILE__ ), array( 'jquery' ), '1.0', true );
+			wp_enqueue_script( "{$this::$lc_label}-admin", $assets_dir.'/admin.min.js', array( 'jquery' ), filemtime( plugin_dir_path( __FILE__ ) . 'assets/admin.min.js' ), true );
 
 			// Styles
-			wp_enqueue_style( 'simple-line-icons', 'https://cdnjs.cloudflare.com/ajax/libs/simple-line-icons/2.3.2/css/simple-line-icons.min.css' );
-			wp_enqueue_style( "{$this::$lc_label}-admin", plugins_url( '/assets/admin.min.css', __FILE__ ) );
+			wp_enqueue_style( "{$this::$lc_label}-admin", $assets_dir.'/admin.min.css', array(), filemtime( plugin_dir_path( __FILE__ ) . 'assets/admin.min.css' ) );
 		}
 	}
 
@@ -167,6 +168,15 @@ class ContentMask {
 			#adminmenu #toplevel_page_{$this::$lc_label} img { padding: 0; }
 			#adminmenu #toplevel_page_{$this::$lc_label} .current img { opacity: 1; }
 		</style>";
+	}
+
+	public function display_svg( $icon = '', $class = '', $attr = '' ){
+		if( $icon == 'download' ) return '<svg class="'. $class .' content-mask-svg svg-download" viewBox="0 0 1024 768"><path d="M602 64q49 0 91 17 43 17 77 51 35 34 53 76 15 34 17 75l2 32 27 17q32 21 55 54l3 5q16 25 25 52 8 27 8 57 0 42-15 78-16 36-46.5 66T831 689t-80 15H243q-37 0-69-13-31-13-57-38-27-26-40-57t-13-67q0-30 10-57.5t29-51.5q22-26 50-42l38-22-6-43q-1-7-1-17 0-23 8-44 9-21 27-38 17-17 38-25 22-9 46-9 19 0 35 5l43 13 26-37q25-33 61-57 60-40 134-40zm0-64q-94 0-170 51-45 30-76 73-25-8-53-8-37 0-70 13.5T174 169q-27 26-41 58-13 33-13 70 0 13 1 26-38 22-67 57Q0 445 0 529q0 50 18 93 18 42 53.5 76.5t79 52T243 768h508q55 0 104-19.5t88.5-58.5 59.5-86q21-49 21-104 0-79-44-145-31-46-76-76-3-51-22-97-23-52-67-96-44-42-98-64Q664 0 602 0zm7 193q-13 0-22.5 9t-9.5 23v306l-95-95q-9-9-22.5-9t-22.5 9-9 22.5 9 22.5l149 150q10 9 23 9t23-9l149-150q9-9 9-22.5t-9-22.5-22.5-9-22.5 9l-95 95V225q0-14-9.5-23t-22.5-9z"></path></svg>';
+		else if( $icon == 'iframe' ) return '<svg class="'. $class .' content-mask-svg svg-iframe" viewBox="0 0 1024 1024"><path d="M64 0Q38 0 19 19T0 64v157q0 14 9.5 23.5T33 254t23.5-9.5T66 221V98q0-13 9.5-22.5T98 66h123q14 0 23.5-9.5T254 33t-9.5-23.5T221 0H64zM0 960q0 26 19 45t45 19h157q14 0 23.5-9.5T254 991t-9.5-23.5T221 958H98q-13 0-22.5-9.5T66 926V803q0-14-9.5-23.5T33 770t-23.5 9.5T0 803v157zm960 64q26 0 45-19t19-45V803q0-14-9.5-23.5T991 770t-23.5 9.5T958 803v123q0 13-9.5 22.5T926 958H803q-14 0-23.5 9.5T770 991t9.5 23.5 23.5 9.5h157zM958 0H803q-14 0-23.5 9.5T770 33t9.5 23.5T803 66h123q13 0 22.5 9.5T958 98v123q0 14 9.5 23.5T991 254t23.5-9.5 9.5-23.5V64q0-26-19-45T960 0h-2zM192 256v512q0 26 19 45t45 19h512q26 0 45-19t19-45V256q0-26-19-45t-45-19H256q-26 0-45 18.5T192 256zm546 514H286q-13 0-22.5-9.5T254 738V286q0-13 9.5-22.5T286 254h452q13 0 22.5 9.5T770 286v452q0 13-9.5 22.5T738 770z"></path></svg>';
+		else if( $icon == 'redirect' ) return '<svg class="'. $class .' content-mask-svg svg-redirect" viewBox="0 0 897.8333740234375 896.8333129882812"><path d="M858 522.833q-15 0-25.5 10.5t-10.5 25.5v236q0 12-9 21t-21 9H102q-12 0-21-9t-9-21v-690q0-12 9-21t21-9h310q15 0 25.5-10.5t10.5-25.5-10.5-25.5-25.5-10.5H102q-42 0-72 30t-30 72v690q0 42 30 72t72 30h690q42 0 72-30t30-72v-236q0-15-10.5-25.5t-25.5-10.5zm28-289l-231-220q-17-17-39-7.5t-22 33.5v118q-187 12-286 162-24 36-40.5 78t-20 58-4.5 26q-3 15 6 27t24 14q2 1 5 1 14 0 24-9t12-22q1-7 4-21t17-49.5 34-64.5q87-129 257-130 3 1 4 1 15 0 25.5-10.5t10.5-25.5v-69l141 134-141 118v-58q0-15-10.5-25.5t-25.5-10.5-25.5 10.5-10.5 25.5v135q0 23 21 32 7 4 15 4 13 0 23-9l231-192q13-11 13.5-27t-11.5-27z"></path></svg>';
+		else if( $icon == 'arrow-up' ) return '<svg class="'. $class .' content-mask-svg svg-arrow-up" viewBox="0 0 1024 574"><path d="M1015 10q-10-10-23-10t-23 10L512 492 55 10Q45 0 32 0T9 10Q0 20 0 34t9 24l480 506q10 10 23 10t23-10l480-506q9-10 9-24t-9-24z"></path></svg>';
+		else if( $icon == 'arrow-down' ) return '<svg class="'. $class .' content-mask-svg svg-arrow-down" viewBox="0 0 1024 574"><path d="M1015 564q-10 10-23 10t-23-10L512 82 55 564q-10 10-23 10T9 564q-9-10-9-24t9-24L489 10q10-10 23-10t23 10l480 506q9 10 9 24t-9 24z"></path></svg>';
+		else return '<svg class="content-mask-svg svg-question svg-missing" viewBox="0 0 1024 1024"><path d="M512 0Q373 0 255 68.5T68.5 255 0 512t68.5 257T255 955.5t257 68.5 257-68.5T955.5 769t68.5-257-68.5-257T769 68.5 512 0zm30 802q0 13-9 22.5t-23 9.5q-13 0-22.5-9.5T478 802t9.5-22.5T510 770q14 0 23 9.5t9 22.5zm66-220q-36 19-51 35t-15 46v11q0 13-9 22.5t-23 9.5q-13 0-22.5-9.5T478 674v-11q0-48 24.5-79.5T578 525q35-18 55.5-52.5T654 398q0-60-42-102t-102-42q-62 0-103 37-30 28-38 68-2 11-11 18.5t-20 7.5q-16 0-25.5-11.5T306 347q12-62 59-104 59-53 145-53 87 0 147.5 61T718 398q0 58-29.5 107.5T608 582z"></path></svg>';
 	}
 
 	public function toggle_content_mask() {
@@ -221,7 +231,14 @@ class ContentMask {
 		if( $this->validate_url( $url ) === true ){
 			$transient_name = 'content_mask-'. strtolower( preg_replace( "/[^a-z0-9]/", '', $url ) );
 
-			if( false === ( $transient = get_transient( $transient_name ) ) ){
+			/**
+			 * As of 1.2.2, check strlen of transient to make sure it's not a blank
+			 * HTML document, such as if the page request failed.
+			 */
+
+			$transient = get_transient( $transient_name );
+
+			if( false === ( $transient ) || strlen( $transient ) < 125  ){
 				$body = wp_remote_retrieve_body( wp_remote_get( $url ) );
 				$body = $this->replace_relative_urls( $url, $body );
 
@@ -255,9 +272,7 @@ class ContentMask {
 				<head>
 					'.$favicon.'
 					<style>
-						body {
-							margin: 0;
-						}
+						body { margin: 0; }
 						iframe {
 							display: block;
 							border: none;
@@ -315,28 +330,32 @@ class ContentMask {
 		foreach( get_post_custom() as $key => $val )
 			${$key} = $val[0];
 
-		if( filter_var( $content_mask_enable, FILTER_VALIDATE_BOOLEAN ) ){
-			// One of our Content Mask pages that's turned ON, continue
+		if( isset( $content_mask_enable ) ){
+			if( filter_var( $content_mask_enable, FILTER_VALIDATE_BOOLEAN ) ){
+				// One of our Content Mask pages that's turned ON, continue
 
-			// Sanitize the URL displayed
-			if( $this->validate_url( $content_mask_url ) === true ){
-				// It's a valid URL, do the thing
-				$this->show_post( $post->ID );
+				// Sanitize the URL displayed
+				if( $this->validate_url( $content_mask_url ) === true ){
+					// It's a valid URL, do the thing
+					$this->show_post( $post->ID );
+				} else {
+					// It's not a valid URL, display an error message;
+					add_action( 'wp_footer', function(){
+						if( is_user_logged_in() ){
+							foreach( get_post_custom() as $key => $val )
+								${$key} = $val[0];
+
+							echo '<div style="border-left: 4px solid #c00; box-shadow: 0 5px 12px -4px rgba(0,0,0,.5); background: #fff; padding: 12px 24px; z-index: 16777271; position: fixed; top: 42px; left: 10px; right: 10px;">It looks like you have enabled a '. $this::$label .' on this post, but don\'t have a valid URL. <a style="display: inline-block; text-decoration: none; font-size: 13px; line-height: 26px; height: 28px; margin: 0; padding: 0 10px 1px; cursor: pointer; border-width: 1px; border-style: solid; -webkit-appearance: none; border-radius: 3px; white-space: nowrap; box-sizing: border-box; background: #0085ba; border-color: #0073aa #006799 #006799; box-shadow: 0 1px 0 #006799; color: #fff; text-decoration: none; text-shadow: 0 -1px 1px #006799, 1px 0 1px #006799, 0 1px 1px #006799, -1px 0 1px #006799; float: right;" class="wp-core-ui button primary" href="'. get_edit_post_link() .'#content_mask_url">Edit '. $this::$label .'</a></div>';
+						}
+					} );
+
+					return; // Failed URL test
+				}
 			} else {
-				// It's not a valid URL, display an error message;
-				add_action( 'wp_footer', function(){
-					if( is_user_logged_in() ){
-						foreach( get_post_custom() as $key => $val )
-							${$key} = $val[0];
-
-						echo '<div style="border-left: 4px solid #c00; box-shadow: 0 5px 12px -4px rgba(0,0,0,.5); background: #fff; padding: 12px 24px; z-index: 16777271; position: fixed; top: 42px; left: 10px; right: 10px;">It looks like you have enabled a '. $this::$label .' on this post, but don\'t have a valid URL. <a style="display: inline-block; text-decoration: none; font-size: 13px; line-height: 26px; height: 28px; margin: 0; padding: 0 10px 1px; cursor: pointer; border-width: 1px; border-style: solid; -webkit-appearance: none; border-radius: 3px; white-space: nowrap; box-sizing: border-box; background: #0085ba; border-color: #0073aa #006799 #006799; box-shadow: 0 1px 0 #006799; color: #fff; text-decoration: none; text-shadow: 0 -1px 1px #006799, 1px 0 1px #006799, 0 1px 1px #006799, -1px 0 1px #006799; float: right;" class="wp-core-ui button primary" href="'. get_edit_post_link() .'#content_mask_url">Edit '. $this::$label .'</a></div>';
-					}
-				} );
-
-				return; // Failed URL test
+				return; // Failed to have Content Mask Enabled set to `true`
 			}
 		} else {
-			return; // Failed to have Content Mask Enabled set to `true`
+			return; // Enable isn't even set
 		}
 
 		return; // Return the original request in all other instances
@@ -350,11 +369,12 @@ class ContentMask {
 		$this->issetor( $content_mask_url, '' );
 		$this->issetor( $content_mask_enable, '' );
 		$this->issetor( $content_mask_method, '' );
+
 		?>
 		<div class="cm_override">
 			<div class="cm-enable-container">
 				<label class="cm_checkbox" for="content_mask_enable">
-					<span aria-label="Enable <?php echo $this::$label; ?>"></span>
+					<span aria-label="Enable <?= $this::$label; ?>"></span>
 					<input type="checkbox" name="content_mask_enable" id="content_mask_enable" <?php if( filter_var( $content_mask_enable, FILTER_VALIDATE_BOOLEAN ) ){ echo 'checked="checked"'; } ?> />
 					<span class="cm_check">
 						<svg class="icon" aria-hidden="true" data-fa-processed="" data-prefix="fas" data-icon="check" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206 0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204 0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204 0l36.203 36.204c9.997 9.997 9.997 26.206 0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"></path></svg>
@@ -364,27 +384,27 @@ class ContentMask {
 			<div class="cm-method-container">
 				<div class="cm_select">
 					<input type="radio" name="content_mask_method" class="cm_select_toggle">
-					<i class="toggle icon icon-arrow-down"></i>
-					<i class="toggle icon icon-arrow-up"></i>
+					<?= $this->display_svg( 'arrow-down', 'toggle' ); ?>
+					<?= $this->display_svg( 'arrow-up', 'toggle' ); ?>
 					<span class="placeholder">Choose a Method...</span>
 					<label class="option">
-						<input type="radio" <?php if( $content_mask_method === 'download' ) { echo 'checked="checked"'; } ?> value="download" name="content_mask_method">
-						<span class="title"><i class="icon icon-cloud-download"></i>Download</span>
+						<input type="radio" <?= $content_mask_method === 'download' ? 'checked="checked"' : '' ?> value="download" name="content_mask_method">
+						<span class="title"><?= $this->display_svg( 'download' ); ?>Download</span>
 					</label>
 					<label class="option">
-						<input type="radio" <?php if( $content_mask_method === 'iframe' ) { echo 'checked="checked"'; } ?> value="iframe" name="content_mask_method">
-						<span class="title"><i class="icon icon-frame"></i>Iframe</span>
+						<input type="radio" <?= $content_mask_method === 'iframe' ? 'checked="checked"' : '' ?> value="iframe" name="content_mask_method">
+						<span class="title"><?= $this->display_svg( 'iframe' ); ?>Iframe</span>
 					</label>
 					<label class="option">
-						<input type="radio" <?php if( $content_mask_method === 'redirect' ) { echo 'checked="checked"'; } ?> value="redirect" name="content_mask_method">
-						<span class="title"><i class="icon icon-share-alt"></i>Redirect (301)</span>
+						<input type="radio" <?= $content_mask_method === 'redirect' ? 'checked="checked"' : '' ?> value="redirect" name="content_mask_method">
+						<span class="title"><?= $this->display_svg( 'redirect' ); ?>Redirect (301)</span>
 					</label>
 				</div>
 			</div>
 			<div class="cm-url-container">
 				<div class="cm_text hide-overflow">
-					<span aria-label="<?php echo $this::$label; ?> URL"></span>
-					<input type="text" class="widefat" name="content_mask_url" id="content_mask_url" placeholder="<?php echo $this::$label; ?> URL" value="<?php echo esc_url( $content_mask_url ); ?>" />
+					<span aria-label="<?= $this::$label; ?> URL"></span>
+					<input type="text" class="widefat" name="content_mask_url" id="content_mask_url" placeholder="<?= $this::$label; ?> URL" value="<?= esc_url( $content_mask_url ); ?>" />
 				</div>
 			</div>
 			<div style="clear: both; height: 24px;"></div>
@@ -447,7 +467,7 @@ class ContentMask {
 				// A boolean "true" value was set, (1, '1', 01, '01', 'on', 'yes', true, 'true') etc.
 				return true;
 			} else {
-				// A boolena "false" value was set -OR- a janky value we don't want was set, unset it.
+				// A boolean "false" value was set -OR- a janky value we don't want was set, unset it.
 				return false;
 			}
 		} else {

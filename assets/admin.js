@@ -1,20 +1,16 @@
 jQuery(document).ready(function($){
-	function cmMessage( classes, message ){
+	function contentMaskMessage( classes, message ){
 		$('.content-mask-admin-table').before('<div class="cm-message notice notice-'+ classes +'"><p>'+ message +'</p></div>');
 	}
 
-	if( $("#content_mask_enable").is(":checked") ){
-		$("#postdivrich").css({"height":0,"overflow":"hidden"}).addClass("hide-overflow");
-	}
-
-	$('body').on( 'click', '.content-mask-admin-table-body .method i', function(){
+	$('.content-mask-admin-table-body').on( 'click', '.method svg', function(){
 		var	$clicked     = $(this),
-			restoreIcon  = $(this).attr('class');
-			postID       = $(this).closest('tr').attr('data-attr-id'),
-			currentState = $(this).closest('tr').attr('data-attr-state'),
+			restoreIcon  = $clicked.attr('class');
+			postID       = $clicked.closest('tr').attr('data-attr-id'),
+			currentState = $clicked.closest('tr').attr('data-attr-state'),
 			newState     = currentState == 'enabled' ? 'disabled' : 'enabled';
 
-		$($clicked).attr('class', 'icon icon-reload');
+		$clicked.closest('div').attr('class', 'cm-reloading');
 
 		var data = {
 			'action': 'toggle_content_mask',
@@ -25,24 +21,29 @@ jQuery(document).ready(function($){
 
 		$.post(ajaxurl, data, function(response) {
 			$('.cm-message').remove(); // Prevent weird interaction with existing messages
+			var classes;
+
 			if( response.status == 200 ){
-				$($clicked).attr('class', restoreIcon);
-				$($clicked).closest('tr').attr('data-attr-state', newState).removeClass(currentState).addClass(newState);
-				cmMessage( 'info', response.message );
-			} else if( response.status == 400 ){
-				cmMessage( 'error', response.message );
-			} else if( response.status == 403) {
-				cmMessage( 'error', response.message );
+				$clicked.attr('class', restoreIcon);
+				$clicked.closest('tr').attr('data-attr-state', newState).toggleClass('disabled enabled');
+				classes = 'info';
+			} else if( response.status == 400 || response.status == 403 ){
+				classes = 'error';
 			}
+
+			$clicked.closest('div').removeClass('cm-reloading')
+
+			contentMaskMessage( classes, response.message );
 		}, 'json');
 	});
 
-	$("#content_mask_enable").click(function(){
-		if( $(this).is(":checked") ){
-			// Hiding the editor was distracting
-			//$("#postdivrich").animate({"height":0,"overflow":"hidden"}).addClass("hide-overflow");
-		} else {
-			$("#postdivrich").animate({"height":437,"overflow":"visible"}).removeClass("hide-overflow");
+	if( $('#content_mask_enable').is(':checked') ){
+		$('#postdivrich').css({'height': 0, 'overflow': 'hidden'}).addClass('hide-overflow');
+	}
+
+	$('#content_mask_enable').click(function(){
+		if( !$(this).is(':checked') ){
+			$('#postdivrich').animate({'height': 437, 'overflow': 'visible'}).removeClass('hide-overflow');
 		}
 	});
 });

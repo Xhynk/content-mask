@@ -4,7 +4,8 @@
 
 .cm_override {
 	letter-spacing: 1.35px;
-	background: linear-gradient(45deg, #085078, #085078);
+	background: #085078;
+	background: linear-gradient(45deg, #287098, #085078);
 	width: calc( 100% - 48px );
 	margin: -6px -12px -12px;
 	padding: 36px 36px 12px;
@@ -18,24 +19,15 @@
 
 .cm-method-container {
 	width: 330px;
-	float: right;
+	position: absolute;
+	right: 36px;
+	box-shadow: 0 5px 15px -8px rgba(0,0,0,.5);
+	z-index: 10;
 }
 
 .cm-url-container {
 	width: calc( 100% - 434px );
 	float: left;
-}
-
-@media all and ( max-width: 1440px ){
-	.cm-url-container {
-		float: none;
-		width: 100%;
-		clear: both;
-		padding-top: 24px;
-	}
-	.cm-method-container {
-		float: left;
-	}
 }
 
 /* Checkbox */
@@ -116,12 +108,23 @@
 	box-shadow: 0px 1em 2em -1.5em rgba(0, 0, 0, 0.5);
 }
 
-.cm_select > i.toggle {
+.cm_select svg {
+	width: 16px;
+	fill: #444;
+	position: relative;
+	top: 2px;
+}
+
+.cm_select .option svg {
+	margin-right: 10px;
+}
+
+.cm_select > .toggle {
 	pointer-events: none;
 	position: absolute;
 	z-index: 4;
 	right: 1.5em;
-	top: 1.6em;
+	top: 1.8em;
 	color: #ccc;
 }
 
@@ -149,11 +152,11 @@
 	cursor: pointer;
 }
 
-.cm_select > input:checked ~ i.toggle.icon-arrow-down {
+.cm_select > input:checked ~ .toggle.svg-arrow-down {
 	display: none;
 }
 
-.cm_select > input:checked ~ i.toggle.icon-arrow-up {
+.cm_select > input:checked ~ .toggle.svg-arrow-up {
 	display: block;
 }
 
@@ -169,11 +172,11 @@
 	display: none;
 }
 
-.cm_select > input:not(:checked) ~ i.toggle.icon-arrow-up {
+.cm_select > input:not(:checked) ~ .toggle.svg-arrow-up {
 	display: none;
 }
 
-.cm_select > input:not(:checked) ~ i.toggle.icon-arrow-down {
+.cm_select > input:not(:checked) ~ .toggle.svg-arrow-down {
 	display: block;
 }
 
@@ -213,12 +216,12 @@
 
 .cm_select label.option span.title:hover {
 	color: #fff;
-	background: rgba(255, 255, 255, 0.4);
+	background: #6b96ae;
 	box-shadow: inset 0px 1px 0px rgba(0, 0, 0, 0.1);
 }
 
-.cm_select label.option span.title:hover i {
-	color: #fff;
+.cm_select input:checked ~ label.option span.title:hover svg {
+	fill: #fff;
 }
 
 .cm_select label.option input {
@@ -353,17 +356,6 @@
 	width: 60px;
 }
 
-.content-mask-admin-table table td.method i {
-	font-size: 18px;
-	position: relative;
-	top: 5px;
-	padding: 8px;
-	border-radius: 30px;
-	background: #fff;
-	cursor: pointer;
-	display: inline-block;
-}
-
 .content-mask-admin-table table td.post-type div {
 	text-transform: capitalize;
 }
@@ -373,38 +365,118 @@
 	color: #bbb;
 }
 
-.content-mask-admin-table table tr.enabled td.method i {
-	color: #fff;
+.content-mask-admin-table table td.method div {
+	cursor: pointer;
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 40px;
+	height: 40px;
+	background: #fff;
+	border-radius: 20px;
+	overflow: hidden;
+}
+
+.content-mask-admin-table table td.method svg {
+	display: inline-block;
+	width: 20px;
+	height: 20px;
+	padding: 10px;
+}
+
+.content-mask-admin-table table td.method svg.download {
+	width: 24px;
+	height: 24px;
+	padding: 8px;
+}
+
+.content-mask-admin-table table tr.enabled td.method div {
 	background: #00d478;
 }
 
-.content-mask-admin-table table td.method i:hover {
+.content-mask-admin-table table tr.enabled td.method svg {
+	fill: #fff;
+}
+
+.content-mask-admin-table table td.method div:hover {
 	cursor: pointer;
 	background: #7fe9bb !important;
 	opacity: 1;
 	color: #fff;
 }
 
-.content-mask-admin-table table td.method i.icon-reload {
+.content-mask-admin-table table tr td.method div.cm-reloading {
 	animation: 1s content_mask_reload linear infinite;
 	background-color: #0078d4 !important;
+}
+
+.content-mask-admin-table table tr td.method div.cm-reloading svg {
+	display: none;
+}
+
+.content-mask-admin-table table tr td.method div.cm-reloading:after {
+	content: "";
+	display: block;
+	width: 8px;
+	height: 8px;
+	border-radius: 10px;
+	position: absolute;
+	top: 50%;
+	left: 25%;
+	transform: translate(-50%,-50%);
+	background: #fff;
+}
+
+.wp-core-ui.toplevel_page_content-mask #wpbody-content > .wrap {
+	position: relative;
 }
 
 .wp-core-ui.toplevel_page_content-mask .notice.cm-message {
 	position: absolute;
 	z-index: 10;
-	top: 9px;
+	top: 0;
 	left: 160px;
 	padding-right: 16px;
 }
 
-/* Animations */
+@media (max-width: 1440px){
+	.cm-url-container {
+		float: none;
+		width: 100%;
+		clear: both;
+		padding-top: 24px;
+	}
+
+	.cm-method-container {
+		left: 115px;
+		right: auto;
+	}
+}
+
+@media (max-width: 520px){
+	.cm-method-container {
+		position: relative;
+		left: 0;
+		width: 100%;
+	}
+
+	.cm_select {
+		width: 100%;
+	}
+	
+	.cm-enable-container {
+		float: none;
+		margin-bottom: 24px;
+		margin: 0 auto 24px;
+	}
+}
+
 @keyframes content_mask_reload {
 	from {
-		transform: rotate(0deg);
+		transform: translateY(-50%) rotate(0deg);
 	}
 	to {
-		transform: rotate(-360deg);
+		transform: translateY(-50%) rotate(360deg);
 	}
 }
 
@@ -420,12 +492,6 @@
 }
 
 @keyframes content_mask_check {
-	from {
-		width: 52px;
-		height: 52px;
-		border: 2px solid #fff;
-		background: #fff;
-	}
 	to {
 		width: 52px;
 		height: 52px;
