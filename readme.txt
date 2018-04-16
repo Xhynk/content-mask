@@ -44,6 +44,11 @@ Notes:
 
 == Changelog ==
 
+= 1.2.2 =
+* Minor changes to prevent undefined variable and similar E_NOTICE level errors from appearing when debug mode was enabled.
+* Removed dependency from external CSS in the admin, namely FontAwesome and Line Icons.
+* Prevented irrelevant meta field checks when not strictly necessary.
+
 = 1.2.1 =
 * Behind the scenes improvement with the plugin name and label
 * Addressed CSS issues with plugins that used the @keyframes name "check"
