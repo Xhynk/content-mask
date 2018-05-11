@@ -3,7 +3,7 @@
 	* Plugin Name:	Content Mask
 	* Plugin URI:	http://xhynk.com/content-mask/
 	* Description:	Easily embed external content into your website without complicated Domain Forwarders, Domain Masks, APIs or Scripts
-	* Version:		1.2.2
+	* Version:		1.3
 	* Author:		Alex Demchak
 	* Author URI:	https://github.com/xhynk
 */
@@ -12,39 +12,40 @@ class ContentMask {
 	private static $instance;
 
 	public static $label	= 'Content Mask';
-	public static $lc_label	= 'content-mask';
+	public static $lc_label = 'content-mask';
 
-	public static $content_mask_methods = array(
-		'download',
-		'iframe',
-		'redirect'
-	);
+	public static $cm_keys  = ['content_mask_url', 'content_mask_enable', 'content_mask_method'];
+	public static $content_mask_methods = ['download', 'iframe', 'redirect'];
 
 	public static function get_instance() {
-		if( null == self::$instance ){
-			self::$instance = new ContentMask();
-		}
+		if( null == self::$instance ) self::$instance = new ContentMask();
+		
 		return self::$instance;
 	}
 
 	public function __construct(){
-		add_action( 'save_post', array( $this, 'save_meta' ), 10, 1 );
-		add_action( 'admin_menu', array( $this, 'add_overview_menu' ) );
-		add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ), 1, 2 );
-		add_action( 'template_redirect', array( $this, 'process_page_request' ), 1, 2 );
-		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
-		add_action( 'admin_enqueue_scripts', array( $this, 'global_admin_assets' ) );
-		add_action( 'wp_ajax_toggle_content_mask', array( $this, 'toggle_content_mask' ) );
+		add_action( 'save_post', [$this, 'save_meta'], 10, 1 );
+		add_action( 'admin_menu', [$this, 'add_overview_menu'] );
+		add_action( 'add_meta_boxes', [$this, 'add_meta_boxes'], 1, 2 );
+		add_action( 'template_redirect', [$this, 'process_page_request'], 1, 2 );
+		add_action( 'admin_enqueue_scripts', [$this, 'enqueue_admin_assets'] );
+		add_action( 'admin_enqueue_scripts', [$this, 'global_admin_assets'] );
+		add_action( 'wp_ajax_toggle_content_mask', [$this, 'toggle_content_mask'] );
+		add_action( 'manage_posts_custom_column' , [$this, 'content_mask_column_content'], 10, 2 );
+		add_action( 'manage_pages_custom_column' , [$this, 'content_mask_column_content'], 10, 2 );
+
+		add_filter( 'manage_posts_columns', [$this, 'content_mask_column'] );
+		add_filter( 'manage_pages_columns', [$this, 'content_mask_column'] );
 
 		// Elegant Theme's "Bloom" isn't playing nicely and is being hooked below Download and Iframe content
 		add_action( 'wp', function(){
 			if( !is_admin() ){
 				global $et_bloom, $post;
-				$content_mask_enable = get_post_meta( $post->ID, 'content_mask_enable', true );
+				extract( $this->get_post_fields( $post->ID ) );
 
 				if( filter_var( $content_mask_enable, FILTER_VALIDATE_BOOLEAN ) ){
-					remove_action( 'wp_footer', array( $et_bloom, 'display_flyin' ) );
-					remove_action( 'wp_footer', array( $et_bloom, 'display_popup' ) );
+					remove_action( 'wp_footer', [$et_bloom, 'display_flyin'] );
+					remove_action( 'wp_footer', [$et_bloom, 'display_popup'] );
 				}
 			}
 		}, 11 );
@@ -54,13 +55,31 @@ class ContentMask {
 		return isset( $var ) ? $var : $default;
 	}
 
+	public function get_post_fields( $post_id = 0, $cm_only = true ){
+		if( $cm_only ){
+			// Only return CM Fields
+			foreach( $this::$cm_keys as $key ){
+				$keys[$key] = get_post_meta( $post_id, $key, true );
+			}
+		} else {
+			// Return all Custom Fields
+			foreach( get_post_custom( $post_id ) as $key => $val ){
+				if( sizeof( $val ) == 1 ){
+					$keys[$key] = $val[0];
+				}
+			}
+		}
+
+ 	 	return $keys;
+	}
+
 	public function add_overview_menu(){
 		add_menu_page(
 			$this::$label,
 			$this::$label,
 			'edit_posts',
 			$this::$lc_label,
-			array( $this, 'admin_overview' ),
+			[$this, 'admin_overview'],
 			plugins_url( "{$this::$lc_label}/assets/icon-solid.png" )
 		);
 	}
@@ -69,22 +88,17 @@ class ContentMask {
 		if( !current_user_can( 'edit_posts' ) ){
 			wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
 		} else {
-			$args = array(
-				'post_status' => array( 'publish', 'draft', 'pending', 'privatex' ),
+			$args = [
+				'post_status' => ['publish', 'draft', 'pending', 'private'],
 				'post_type'   => get_post_types( '', 'names' ),
-				'meta_query'  => array(
-					array(
-						'key'     => 'content_mask_url',
-						'value'   => '',
-						'compare' => '!=',
-					),
-				),
-			);
+				'meta_query'  => [[
+					'key'	  	=> 'content_mask_url',
+					'value'   	=> '',
+					'compare' 	=> '!=',
+				]],
+			];
 
-			if( !current_user_can( 'edit_others_posts' ) ){
-				$args['perm'] = 'editable';
-			}
-
+			if( !current_user_can( 'edit_others_posts' ) ) $args['perm'] = 'editable';
 			$query = new WP_Query( $args );
 		?>
 			<div class="wrap">
@@ -116,17 +130,18 @@ class ContentMask {
 									<?php while( $query->have_posts() ){ ?>
 										<?php
 											$query->the_post();
-											$enabled = filter_var( $this->issetor( get_post_meta( get_the_ID(), 'content_mask_enable', true ) ), FILTER_VALIDATE_BOOLEAN ) ? 'enabled' : 'disabled'
+											extract( $this->get_post_fields( get_the_ID() ) ); 
+
+											$enabled = filter_var( $content_mask_enable, FILTER_VALIDATE_BOOLEAN ) ? 'enabled' : 'disabled'
 										?>
 										<tr data-attr-id="<?= get_the_ID(); ?>" data-attr-state="<?= $enabled; ?>" class="<?= $enabled; ?>">
 											<td class="method"><div><?php
-												$content_mask_method = $this->issetor( get_post_meta( get_the_ID(), 'content_mask_method', true ) );
 												if( $content_mask_method === 'download' ) { echo $this->display_svg( 'download', 'icon', 'title="Download"' ); }
 												else if( $content_mask_method === 'iframe' ) { echo $this->display_svg( 'iframe', 'icon', 'title="Iframe"' ); }
 												else if( $content_mask_method === 'redirect' ) { echo $this->display_svg( 'redirect', 'icon', 'title="Redirect (301)"' ); }
 											?></div></td>
 											<td class="title"><div><?= get_the_title(); ?></div></td>
-											<td class="url"><div><?= $this->issetor( get_post_meta( get_the_ID(), 'content_mask_url', true ) ); ?></div></td>
+											<td class="url"><div><?= $content_mask_url; ?></div></td>
 											<td class="post-type"><div data-post-status="<?= get_post_status(); ?>"><?= get_post_type(); ?></div></td>
 											<td class="edit"><div><a class="wp-core-ui button" href="<?= get_edit_post_link(); ?>">Edit</a></div></td>
 											<td class="view"><div><a target="_blank" class="wp-core-ui button-primary" href="<?= get_permalink(); ?>">View</a></div></td>
@@ -146,20 +161,18 @@ class ContentMask {
 	}
 
 	public function enqueue_admin_assets( $hook ){
-		$hook_array = array(
+		$hook_array = [
+			'edit.php',
 			'post.php',
 			'post-new.php',
 			"toplevel_page_{$this::$lc_label}",
-		);
+		];
 
 		if( in_array( $hook, $hook_array ) ){
 			$assets_dir = plugins_url( '/assets', __FILE__ );
-
-			// Scripts
-			wp_enqueue_script( "{$this::$lc_label}-admin", $assets_dir.'/admin.min.js', array( 'jquery' ), filemtime( plugin_dir_path( __FILE__ ) . 'assets/admin.min.js' ), true );
-
-			// Styles
-			wp_enqueue_style( "{$this::$lc_label}-admin", $assets_dir.'/admin.min.css', array(), filemtime( plugin_dir_path( __FILE__ ) . 'assets/admin.min.css' ) );
+			
+			wp_enqueue_script( "{$this::$lc_label}-admin", $assets_dir.'/admin.min.js', ['jquery'], filemtime( plugin_dir_path( __FILE__ ) . 'assets/admin.min.js' ), true );
+			wp_enqueue_style( "{$this::$lc_label}-admin", $assets_dir.'/admin.min.css', [], filemtime( plugin_dir_path( __FILE__ ) . 'assets/admin.min.css' ) );
 		}
 	}
 
@@ -171,23 +184,24 @@ class ContentMask {
 	}
 
 	public function display_svg( $icon = '', $class = '', $attr = '' ){
-		if( $icon == 'download' ) return '<svg class="'. $class .' content-mask-svg svg-download" viewBox="0 0 1024 768"><path d="M602 64q49 0 91 17 43 17 77 51 35 34 53 76 15 34 17 75l2 32 27 17q32 21 55 54l3 5q16 25 25 52 8 27 8 57 0 42-15 78-16 36-46.5 66T831 689t-80 15H243q-37 0-69-13-31-13-57-38-27-26-40-57t-13-67q0-30 10-57.5t29-51.5q22-26 50-42l38-22-6-43q-1-7-1-17 0-23 8-44 9-21 27-38 17-17 38-25 22-9 46-9 19 0 35 5l43 13 26-37q25-33 61-57 60-40 134-40zm0-64q-94 0-170 51-45 30-76 73-25-8-53-8-37 0-70 13.5T174 169q-27 26-41 58-13 33-13 70 0 13 1 26-38 22-67 57Q0 445 0 529q0 50 18 93 18 42 53.5 76.5t79 52T243 768h508q55 0 104-19.5t88.5-58.5 59.5-86q21-49 21-104 0-79-44-145-31-46-76-76-3-51-22-97-23-52-67-96-44-42-98-64Q664 0 602 0zm7 193q-13 0-22.5 9t-9.5 23v306l-95-95q-9-9-22.5-9t-22.5 9-9 22.5 9 22.5l149 150q10 9 23 9t23-9l149-150q9-9 9-22.5t-9-22.5-22.5-9-22.5 9l-95 95V225q0-14-9.5-23t-22.5-9z"></path></svg>';
-		else if( $icon == 'iframe' ) return '<svg class="'. $class .' content-mask-svg svg-iframe" viewBox="0 0 1024 1024"><path d="M64 0Q38 0 19 19T0 64v157q0 14 9.5 23.5T33 254t23.5-9.5T66 221V98q0-13 9.5-22.5T98 66h123q14 0 23.5-9.5T254 33t-9.5-23.5T221 0H64zM0 960q0 26 19 45t45 19h157q14 0 23.5-9.5T254 991t-9.5-23.5T221 958H98q-13 0-22.5-9.5T66 926V803q0-14-9.5-23.5T33 770t-23.5 9.5T0 803v157zm960 64q26 0 45-19t19-45V803q0-14-9.5-23.5T991 770t-23.5 9.5T958 803v123q0 13-9.5 22.5T926 958H803q-14 0-23.5 9.5T770 991t9.5 23.5 23.5 9.5h157zM958 0H803q-14 0-23.5 9.5T770 33t9.5 23.5T803 66h123q13 0 22.5 9.5T958 98v123q0 14 9.5 23.5T991 254t23.5-9.5 9.5-23.5V64q0-26-19-45T960 0h-2zM192 256v512q0 26 19 45t45 19h512q26 0 45-19t19-45V256q0-26-19-45t-45-19H256q-26 0-45 18.5T192 256zm546 514H286q-13 0-22.5-9.5T254 738V286q0-13 9.5-22.5T286 254h452q13 0 22.5 9.5T770 286v452q0 13-9.5 22.5T738 770z"></path></svg>';
-		else if( $icon == 'redirect' ) return '<svg class="'. $class .' content-mask-svg svg-redirect" viewBox="0 0 897.8333740234375 896.8333129882812"><path d="M858 522.833q-15 0-25.5 10.5t-10.5 25.5v236q0 12-9 21t-21 9H102q-12 0-21-9t-9-21v-690q0-12 9-21t21-9h310q15 0 25.5-10.5t10.5-25.5-10.5-25.5-25.5-10.5H102q-42 0-72 30t-30 72v690q0 42 30 72t72 30h690q42 0 72-30t30-72v-236q0-15-10.5-25.5t-25.5-10.5zm28-289l-231-220q-17-17-39-7.5t-22 33.5v118q-187 12-286 162-24 36-40.5 78t-20 58-4.5 26q-3 15 6 27t24 14q2 1 5 1 14 0 24-9t12-22q1-7 4-21t17-49.5 34-64.5q87-129 257-130 3 1 4 1 15 0 25.5-10.5t10.5-25.5v-69l141 134-141 118v-58q0-15-10.5-25.5t-25.5-10.5-25.5 10.5-10.5 25.5v135q0 23 21 32 7 4 15 4 13 0 23-9l231-192q13-11 13.5-27t-11.5-27z"></path></svg>';
-		else if( $icon == 'arrow-up' ) return '<svg class="'. $class .' content-mask-svg svg-arrow-up" viewBox="0 0 1024 574"><path d="M1015 10q-10-10-23-10t-23 10L512 492 55 10Q45 0 32 0T9 10Q0 20 0 34t9 24l480 506q10 10 23 10t23-10l480-506q9-10 9-24t-9-24z"></path></svg>';
-		else if( $icon == 'arrow-down' ) return '<svg class="'. $class .' content-mask-svg svg-arrow-down" viewBox="0 0 1024 574"><path d="M1015 564q-10 10-23 10t-23-10L512 82 55 564q-10 10-23 10T9 564q-9-10-9-24t9-24L489 10q10-10 23-10t23 10l480 506q9 10 9 24t-9 24z"></path></svg>';
-		else return '<svg class="content-mask-svg svg-question svg-missing" viewBox="0 0 1024 1024"><path d="M512 0Q373 0 255 68.5T68.5 255 0 512t68.5 257T255 955.5t257 68.5 257-68.5T955.5 769t68.5-257-68.5-257T769 68.5 512 0zm30 802q0 13-9 22.5t-23 9.5q-13 0-22.5-9.5T478 802t9.5-22.5T510 770q14 0 23 9.5t9 22.5zm66-220q-36 19-51 35t-15 46v11q0 13-9 22.5t-23 9.5q-13 0-22.5-9.5T478 674v-11q0-48 24.5-79.5T578 525q35-18 55.5-52.5T654 398q0-60-42-102t-102-42q-62 0-103 37-30 28-38 68-2 11-11 18.5t-20 7.5q-16 0-25.5-11.5T306 347q12-62 59-104 59-53 145-53 87 0 147.5 61T718 398q0 58-29.5 107.5T608 582z"></path></svg>';
+		if( $icon == 'download' ) return '<svg class="'. $class .' content-mask-svg svg-download" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 17 12 21 16 17"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"></path></svg>';
+		else if( $icon == 'iframe' ) return '<svg class="'. $class .' content-mask-svg svg-iframe" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>';
+		else if( $icon == 'redirect' ) return '<svg class="'. $class .' content-mask-svg svg-redirect" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>';
+		else if( $icon == 'arrow-up' ) return '<svg class="'. $class .' content-mask-svg svg-arrow-up" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>';
+		else if( $icon == 'checkmark' ) return '<svg class="'. $class .' content-mask-svg svg-checkmark" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+		else if( $icon == 'arrow-down' ) return '<svg class="'. $class .' content-mask-svg svg-arrow-down" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+		else return '<svg class="content-mask-svg svg-question svg-missing" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12" y2="17"></line></svg>';
 	}
 
 	public function toggle_content_mask() {
-		foreach( $_POST as $key => $val ) ${$key} = $val;
-		$response = array();
+		extract( $_POST );
+		$response = [];
 
 		if( $newState == 'enabled' ){
-			$_newState     = true;
+			$_newState	 = true;
 			$_currentState = false;
 		} else if( $newState == 'disabled' ){
-			$_newState     = false;
+			$_newState	 = false;
 			$_currentState = true;
 		} else {
 			$response['status']  = 403;
@@ -217,7 +231,7 @@ class ContentMask {
 
 	public function replace_relative_urls( $url, $str, $protocol_relative = true ){
 		if( $this->validate_url( $url ) ){
-			$url = ( $protocol_relative === true ) ? str_replace( array( 'http://', 'https://' ), '//', $url ) : $url;
+			$url = ( $protocol_relative === true ) ? str_replace( ['http://', 'https://'], '//', $url ) : $url;
 			$url = ( substr( $url, -1 ) === '/' ) ? substr( $url, 0, -1 ) : $url;
 
 			return preg_replace('~(?:src|action|href)=[\'"]\K/(?!/)[^\'"]*~', "$url$0", $str);
@@ -293,28 +307,22 @@ class ContentMask {
 	}
 
 	public function show_post( $post_id ){
-		$url = esc_url( get_post_meta( $post_id, 'content_mask_url', true ) );
+		extract( $this->get_post_fields( $post_id ) );
+		$url = esc_url( $content_mask_url );
 
 		if( $this->validate_url( $url ) === true ){
-			$method = sanitize_text_field( get_post_meta( $post_id, 'content_mask_method', true ) );
+			$method = sanitize_text_field( $content_mask_method );
 
-			if( $method === 'download' ){
-				echo $this->get_page_content( $url );
-			} else if( $method === 'iframe' ){
-				echo $this->get_page_iframe( $url );
-			} else if( $method === 'redirect' ){
-				wp_redirect( $url, 301 );
-			} else {
-				// Default to Download
-				echo $this->get_page_content( $url );
-			}
+			if( $method === 'download' ) echo $this->get_page_content( $url );
+			else if( $method === 'iframe' ) echo $this->get_page_iframe( $url );
+			else if( $method === 'redirect' ) wp_redirect( $url, 301 );
+			else echo $this->get_page_content( $url );
 
 			exit();
 		} else {
 			wp_die( "{$this::$label} URL is invalid" );
 		}
-
-		exit(); // Too far!
+		exit();
 	}
 
 	public function process_page_request() {
@@ -327,8 +335,7 @@ class ContentMask {
 		// 404 has no custom fields
 		if( is_404() ) return;
 
-		foreach( get_post_custom() as $key => $val )
-			${$key} = $val[0];
+		extract( $this->get_post_fields( $post->ID ) );
 
 		if( isset( $content_mask_enable ) ){
 			if( filter_var( $content_mask_enable, FILTER_VALIDATE_BOOLEAN ) ){
@@ -341,13 +348,9 @@ class ContentMask {
 				} else {
 					// It's not a valid URL, display an error message;
 					add_action( 'wp_footer', function(){
-						if( is_user_logged_in() ){
-							foreach( get_post_custom() as $key => $val )
-								${$key} = $val[0];
-
+						if( is_user_logged_in() )
 							echo '<div style="border-left: 4px solid #c00; box-shadow: 0 5px 12px -4px rgba(0,0,0,.5); background: #fff; padding: 12px 24px; z-index: 16777271; position: fixed; top: 42px; left: 10px; right: 10px;">It looks like you have enabled a '. $this::$label .' on this post, but don\'t have a valid URL. <a style="display: inline-block; text-decoration: none; font-size: 13px; line-height: 26px; height: 28px; margin: 0; padding: 0 10px 1px; cursor: pointer; border-width: 1px; border-style: solid; -webkit-appearance: none; border-radius: 3px; white-space: nowrap; box-sizing: border-box; background: #0085ba; border-color: #0073aa #006799 #006799; box-shadow: 0 1px 0 #006799; color: #fff; text-decoration: none; text-shadow: 0 -1px 1px #006799, 1px 0 1px #006799, 0 1px 1px #006799, -1px 0 1px #006799; float: right;" class="wp-core-ui button primary" href="'. get_edit_post_link() .'#content_mask_url">Edit '. $this::$label .'</a></div>';
-						}
-					} );
+					});
 
 					return; // Failed URL test
 				}
@@ -357,19 +360,12 @@ class ContentMask {
 		} else {
 			return; // Enable isn't even set
 		}
-
 		return; // Return the original request in all other instances
 	}
 
 	public function content_mask_meta_box(){
-		foreach( get_post_custom() as $key => $val ){
-			${$key} = $val[0];
-		}
-
-		$this->issetor( $content_mask_url, '' );
-		$this->issetor( $content_mask_enable, '' );
-		$this->issetor( $content_mask_method, '' );
-
+		global $post;
+		extract( $this->get_post_fields( $post->ID ) );
 		?>
 		<div class="cm_override">
 			<div class="cm-enable-container">
@@ -377,7 +373,7 @@ class ContentMask {
 					<span aria-label="Enable <?= $this::$label; ?>"></span>
 					<input type="checkbox" name="content_mask_enable" id="content_mask_enable" <?php if( filter_var( $content_mask_enable, FILTER_VALIDATE_BOOLEAN ) ){ echo 'checked="checked"'; } ?> />
 					<span class="cm_check">
-						<svg class="icon" aria-hidden="true" data-fa-processed="" data-prefix="fas" data-icon="check" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206 0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204 0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204 0l36.203 36.204c9.997 9.997 9.997 26.206 0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"></path></svg>
+						<?= $this->display_svg( 'checkmark', 'icon' ); ?>
 					</span>
 				</label>
 			</div>
@@ -388,7 +384,7 @@ class ContentMask {
 					<?= $this->display_svg( 'arrow-up', 'toggle' ); ?>
 					<span class="placeholder">Choose a Method...</span>
 					<label class="option">
-						<input type="radio" <?= $content_mask_method === 'download' ? 'checked="checked"' : '' ?> value="download" name="content_mask_method">
+						<input type="radio" <?= $content_mask_method == 'download' ? 'checked="checked"' : '' ?> value="download" name="content_mask_method">
 						<span class="title"><?= $this->display_svg( 'download' ); ?>Download</span>
 					</label>
 					<label class="option">
@@ -412,7 +408,7 @@ class ContentMask {
 	<?php }
 
 	public function add_meta_boxes(){
-		add_meta_box( 'content_mask_meta_box', "{$this::$label} Settings", array( $this, 'content_mask_meta_box' ), null, 'normal', 'high' );
+		add_meta_box( 'content_mask_meta_box', "{$this::$label} Settings", [$this, 'content_mask_meta_box'], null, 'normal', 'high' );
 	}
 
 	public function sanitize_url( $input_url ){
@@ -477,21 +473,15 @@ class ContentMask {
 	}
 
 	public function save_meta( $post_id ){
-		global $_POST;
-
-		$content_mask_url	 = @$_POST['content_mask_url'];
-		$content_mask_method = @$_POST['content_mask_method'];
-		$content_mask_enable = @$_POST['content_mask_enable'];
-
-		## Sanitize
+		extract( $_POST );
+		foreach( $this::$cm_keys as $key ) $this->issetor( ${$key} );
 
 		// Content Mask URL - should only allow URLs, nothing else, otherwise set it to empty/false
-		if( isset( $content_mask_url ) )
-			update_post_meta( $post_id, 'content_mask_url', $this->sanitize_url( $content_mask_url ) );
+		update_post_meta( $post_id, 'content_mask_url', $this->sanitize_url( $content_mask_url ) );
 
 		// Content Mask Method - Should be 1 of 3 values, otherwise set it back to empty/false
-		if( isset( $content_mask_method ) )
-			update_post_meta( $post_id, 'content_mask_method', $this->sanitize_select( $content_mask_method, $this::$content_mask_methods ) );
+		$method = $content_mask_method === null ? 'download' : $this->sanitize_select( $content_mask_method, $this::$content_mask_methods );
+		update_post_meta( $post_id, 'content_mask_method', $method );
 
 		// Content Mask Enable - Being tricky to unset, so we update it always and just set it to true/false based on whether or not it was empty
 		update_post_meta( $post_id, 'content_mask_enable', $this->sanitize_checkbox( $content_mask_enable ) );
@@ -499,6 +489,27 @@ class ContentMask {
 		// Delete the cached 'download' copy any time this Page, Post or Custom Post Type is updated.
 		delete_transient( 'content_mask-'. strtolower( preg_replace( "/[^a-z0-9]/", '', $content_mask_url ) ) );
 	}
+
+	public function content_mask_column( $columns ){
+		//$columns['content-mask'] = 'Content Mask';
+		$columns['content-mask'] = 'Mask'; // Was a tad too long
+		return $columns;
+	}
+
+	public function content_mask_column_content( $column, $post_id ){
+		switch( $column ){
+			case 'content-mask':
+				extract( $this->get_post_fields( get_the_ID() ) );
+				$enabled = !empty( $content_mask_enable ) ? 'enabled' : 'disabled';
+				
+				echo "<div class='cm-method $enabled' data-attr-state='$enabled'><div>";
+					if( $content_mask_method === 'download' ) { echo $this->display_svg( 'download', 'icon', 'title="Download"' ); }
+					else if( $content_mask_method === 'iframe' ) { echo $this->display_svg( 'iframe', 'icon', 'title="Iframe"' ); }
+					else if( $content_mask_method === 'redirect' ) { echo $this->display_svg( 'redirect', 'icon', 'title="Redirect (301)"' ); }
+					break;
+				echo '</div></div>';
+		}
+	}
 }
 
-add_action( 'plugins_loaded', array( 'ContentMask', 'get_instance' ) );
+add_action( 'plugins_loaded', ['ContentMask', 'get_instance'] );

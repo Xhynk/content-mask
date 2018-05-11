@@ -3,8 +3,8 @@ Contributors: Alex Demchak
 Donate Link: http://ko-fi.com/reverendxhynk/
 Tags: Domain Mask, Content Mask, URL Mask, Embed, Redirect, 301, 301 Redirect, Iframe
 Requires at Least: 3.5.1
-Tested Up To: 4.9.4
-Stable tag: 1.2.2
+Tested Up To: 4.9.5
+Stable tag: 1.3
 Author URI: https://github.com/Xhynk
 Plugin URL: https://xhynk.com/content-mask/
 License: GPLv2 or later
@@ -43,6 +43,11 @@ Notes:
 3. Notice the URL hasn't changed at all using the download or iframe method, but the content is 100% replaced on the front end with the Content Mask URL's content.
 
 == Changelog ==
+
+= 1.3 =
+* Underthe hood improves with custom field variable extraction.
+* Improved SVG icon clarity.
+* Added Content Mask column to Page and Post edit lists which allows an at-a-glance preview of whether Content Mask is enabled, and which type; as well as allowing an Ajax button-press to enable or disable the Content Mask (like on the Content Mask overview admin page).
 
 = 1.2.2 =
 * Minor changes to prevent undefined variable and similar E_NOTICE level errors from appearing when debug mode was enabled.

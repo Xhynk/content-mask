@@ -3,12 +3,20 @@ jQuery(document).ready(function($){
 		$('.content-mask-admin-table').before('<div class="cm-message notice notice-'+ classes +'"><p>'+ message +'</p></div>');
 	}
 
-	$('.content-mask-admin-table-body').on( 'click', '.method svg', function(){
+	$('.content-mask-admin-table-body, .column-content-mask').on( 'click', '.method svg, .cm-method svg', function(){
 		var	$clicked     = $(this),
 			restoreIcon  = $clicked.attr('class');
-			postID       = $clicked.closest('tr').attr('data-attr-id'),
-			currentState = $clicked.closest('tr').attr('data-attr-state'),
-			newState     = currentState == 'enabled' ? 'disabled' : 'enabled';
+
+		if( $clicked.closest('td').hasClass('method') ){
+			var postID = $clicked.closest('tr').attr('data-attr-id');
+			var stateController = $clicked.closest('tr');
+		} else {
+			var postID = $clicked.closest('tr').attr('id').replace('post-', '');
+			var stateController = $clicked.closest('.cm-method');
+		}
+
+		var currentState = stateController.attr('data-attr-state');
+		var newState     = currentState == 'enabled' ? 'disabled' : 'enabled';
 
 		$clicked.closest('div').attr('class', 'cm-reloading');
 
@@ -25,7 +33,7 @@ jQuery(document).ready(function($){
 
 			if( response.status == 200 ){
 				$clicked.attr('class', restoreIcon);
-				$clicked.closest('tr').attr('data-attr-state', newState).toggleClass('disabled enabled');
+				stateController.attr('data-attr-state', newState).toggleClass('disabled enabled');
 				classes = 'info';
 			} else if( response.status == 400 || response.status == 403 ){
 				classes = 'error';
@@ -43,7 +51,7 @@ jQuery(document).ready(function($){
 
 	$('#content_mask_enable').click(function(){
 		if( !$(this).is(':checked') ){
-			$('#postdivrich').animate({'height': 437, 'overflow': 'visible'}).removeClass('hide-overflow');
+			$('#postdivrich').animate({'height': 416, 'overflow': 'visible'}).removeClass('hide-overflow');
 		}
 	});
 });
