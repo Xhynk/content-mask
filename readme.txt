@@ -30,7 +30,7 @@ Notes:
 
  - Please confirm you're allowed to utilize and embed the content before using any particular URL, don't Content Mask any content you don't have license to share or use.
  
- - Content embedded using the Download method is cached using the [WordPress Transients API](https://codex.wordpress.org/Transients_API) for 4 hours to prevent hammering the host URL with additional traffic. If the content is updated and you would like a fresh copy, you may just click the "Update" button on the Page, Post, or Custom Post Type to refresh the transient.
+ - Content embedded using the Download method is cached using the [WordPress Transients API](https://codex.wordpress.org/Transients_API) for 4 hours by default to prevent hammering the host URL with additional traffic. If the content is updated and you would like a fresh copy, you may just click the "Update" button on the Page, Post, or Custom Post Type to refresh the transient. You may also change the cache expiration timer per page.
 
  - You may use the Transients Manager plugin to manage transients stored with the Download method. All Content Mask related transients contain the prefix "content_mask-" plus a stripped version of the Content Mask URL, such as "content_mask-httpxhynkcom".
 
@@ -43,6 +43,9 @@ Notes:
 3. Notice the URL hasn't changed at all using the download or iframe method, but the content is 100% replaced on the front end with the Content Mask URL's content.
 
 == Changelog ==
+
+= 1.4 =
+* Cache (WP Transient) Duration for the Download Method can now be controlled with common values from 1 hour to 4 weeks.
 
 = 1.3 =
 * Underthe hood improves with custom field variable extraction.
