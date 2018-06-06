@@ -3,8 +3,8 @@ Contributors: Alex Demchak
 Donate Link: http://ko-fi.com/reverendxhynk/
 Tags: Domain Mask, Content Mask, URL Mask, Embed, Redirect, 301, 301 Redirect, Iframe
 Requires at Least: 3.5.1
-Tested Up To: 4.9.5
-Stable tag: 1.3
+Tested Up To: 4.9.6
+Stable tag: 1.4
 Author URI: https://github.com/Xhynk
 Plugin URL: https://xhynk.com/content-mask/
 License: GPLv2 or later

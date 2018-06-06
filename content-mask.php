@@ -3,9 +3,24 @@
 	* Plugin Name:	Content Mask
 	* Plugin URI:	http://xhynk.com/content-mask/
 	* Description:	Easily embed external content into your website without complicated Domain Forwarders, Domain Masks, APIs or Scripts
-	* Version:		1.3
+	* Version:		1.4
 	* Author:		Alex Demchak
 	* Author URI:	https://github.com/xhynk
+
+	*	Copyright Third River Marketing, LLC, Alex Demchak
+
+	*	This program is free software; you can redistribute it and/or modify
+	*	it under the terms of the GNU General Public License as published by
+	*	the Free Software Foundation; either version 3 of the License, or
+	*	(at your option) any later version.
+
+	*	This program is distributed in the hope that it will be useful,
+	*	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	*	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	*	GNU General Public License for more details.
+
+	*	You should have received a copy of the GNU General Public License
+	*	along with this program.  If not, see http://www.gnu.org/licenses.
 */
 
 class ContentMask {
@@ -14,7 +29,7 @@ class ContentMask {
 	public static $label	= 'Content Mask';
 	public static $lc_label = 'content-mask';
 
-	public static $cm_keys  = ['content_mask_url', 'content_mask_enable', 'content_mask_method'];
+	public static $cm_keys  = ['content_mask_url', 'content_mask_enable', 'content_mask_method', 'content_mask_transient_expiration'];
 	public static $content_mask_methods = ['download', 'iframe', 'redirect'];
 
 	public static function get_instance() {
@@ -240,7 +255,25 @@ class ContentMask {
 		}
 	}
 
-	public function get_page_content( $url ){
+	public function time_to_seconds( $input ){
+		if( $input != 'never' ){;
+			$ex   = explode( ' ', $input );
+			$int  = intval( $ex[0] );
+			$type = strtolower( $ex[1] );
+
+				 if( $type == 'hour' ) $mod = 3600;
+			else if( $type == 'day'  ) $mod = 86400;
+			else if( $type == 'week' ) $mod = 604800;
+
+			$expiration = $int * $mod;
+		} else {
+			$expiration = 0;
+		}
+
+		return intval( $expiration );
+	}
+
+	public function get_page_content( $url, $expiration = 14400 ){
 		## Download the Content Mask URL into the page content, overriding everything.
 		if( $this->validate_url( $url ) === true ){
 			$transient_name = 'content_mask-'. strtolower( preg_replace( "/[^a-z0-9]/", '', $url ) );
@@ -256,7 +289,7 @@ class ContentMask {
 				$body = wp_remote_retrieve_body( wp_remote_get( $url ) );
 				$body = $this->replace_relative_urls( $url, $body );
 
-				set_transient( $transient_name, $body, 14400 );
+				set_transient( $transient_name, $body, $expiration );
 
 				return $body;
 			} else {
@@ -313,10 +346,10 @@ class ContentMask {
 		if( $this->validate_url( $url ) === true ){
 			$method = sanitize_text_field( $content_mask_method );
 
-			if( $method === 'download' ) echo $this->get_page_content( $url );
+			if( $method === 'download' ) echo $this->get_page_content( $url, $this->time_to_seconds( $content_mask_transient_expiration ) );
 			else if( $method === 'iframe' ) echo $this->get_page_iframe( $url );
 			else if( $method === 'redirect' ) wp_redirect( $url, 301 );
-			else echo $this->get_page_content( $url );
+			else echo $this->get_page_content( $url, $this->time_to_seconds( $content_mask_transient_expiration ) );
 
 			exit();
 		} else {
@@ -404,6 +437,50 @@ class ContentMask {
 				</div>
 			</div>
 			<div style="clear: both; height: 24px;"></div>
+			<div class="cm-expiration-div">
+				<h2 class="cm-expiration-header"><strong>Cache Expiration:</strong><br /><sup>(Download Method Only)</sup></h2>
+				<div class="cm-expiration-container">
+					<div class="cm_select">
+						<?php $test = $this->time_to_seconds( $content_mask_transient_expiration ); ?>
+						<input type="radio" name="content_mask_transient_expiration" class="cm_select_toggle">
+						<?= $this->display_svg( 'arrow-down', 'toggle' ); ?>
+						<?= $this->display_svg( 'arrow-up', 'toggle' ); ?>
+						<span class="placeholder">Cache Expiration:</span>
+						<label class="option">
+							<input type="radio" <?= $content_mask_transient_expiration == 'never' ? 'checked="checked"' : '' ?> value="never" name="content_mask_transient_expiration">
+							<span class="title">Never Cache</span>
+						</label>
+						<?php
+							$times = [];
+
+							foreach( range(1, 12) as $hour ){ $times['hour'][] = $hour .' Hour'; }
+							foreach( range(1, 6)  as $day ){  $times['day'][]  = $day .' Day'; }
+							foreach( range(1, 4)  as $week ){ $times['week'][] = $week .' Week'; }
+
+							foreach( $times as $time ){
+								$i = 0;
+								foreach( $time as $val ){ ?>
+									<?php $s = $i++ == 0 ? '' : 's'; ?>
+									<label class="option">
+										<?php
+											if( $content_mask_transient_expiration == '' && $val == '4 Hour' ){
+												$checked = 'checked';
+											} else if ( $content_mask_transient_expiration == $val ) {
+												$checked = 'checked';
+											} else {
+												$checked = '';
+											}
+										?>
+										<input type="radio" <?= $checked; ?> value="<?= $val; ?>" name="content_mask_transient_expiration">
+										<span class="title"><?= "$val$s"; ?></span>
+									</label>
+								<?php }
+							}
+						?>
+					</div>
+				</div>
+			</div>
+			<div style="clear: both; height: 12px;"></div>
 		</div>
 	<?php }
 
@@ -485,6 +562,14 @@ class ContentMask {
 
 		// Content Mask Enable - Being tricky to unset, so we update it always and just set it to true/false based on whether or not it was empty
 		update_post_meta( $post_id, 'content_mask_enable', $this->sanitize_checkbox( $content_mask_enable ) );
+
+		// Content Mask Transient Expiration
+		$expirations = [];
+		foreach( range(1, 12) as $hour ){ $expirations[] = $hour .' Hour'; }
+		foreach( range(1, 6)  as $day ){  $expirations[] = $day .' Day'; }
+		foreach( range(1, 4)  as $week ){ $expirations[] = $week .' Week'; }
+
+		update_post_meta( $post_id, 'content_mask_transient_expiration', $this->sanitize_select( $content_mask_transient_expiration, $expirations ) );
 
 		// Delete the cached 'download' copy any time this Page, Post or Custom Post Type is updated.
 		delete_transient( 'content_mask-'. strtolower( preg_replace( "/[^a-z0-9]/", '', $content_mask_url ) ) );

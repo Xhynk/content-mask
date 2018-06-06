@@ -1,4 +1,12 @@
 jQuery(document).ready(function($){
+	$('#content_mask_meta_box [name="content_mask_method"]').on('change', function(){
+		if( $(this).val() == 'download' ){
+			$('.cm-expiration-div').fadeIn();
+		} else {
+			$('.cm-expiration-div').fadeOut();
+		}
+	});
+
 	function contentMaskMessage( classes, message ){
 		$('.content-mask-admin-table').before('<div class="cm-message notice notice-'+ classes +'"><p>'+ message +'</p></div>');
 	}
