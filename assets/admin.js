@@ -11,6 +11,50 @@ jQuery(document).ready(function($){
 		$('.content-mask-admin-table').before('<div class="cm-message notice notice-'+ classes +'"><p>'+ message +'</p></div>');
 	}
 
+	$('.content-mask-admin-table-body td.cache').on( 'click', 'a', function(){
+		$('.cm-message').remove();
+
+		var	$clicked   = $(this),
+			maskURL    = $clicked.closest('tr').find('td.view a').attr('href'),
+			transient  = $clicked.attr('data-transient'),
+			postID     = $clicked.closest('tr').attr('data-attr-id'),
+			cacheFor   = $clicked.closest('tr').find('td.url a').text();
+			expiration = $clicked.attr('data-expiration'),
+			$methodDiv = $clicked.closest('tr').find('td.method div'),
+			expirationReadable = $clicked.attr('data-expiration-readable');
+
+		$methodDiv.addClass('cm-reloading');
+
+		var data = {
+			'action': 'refresh_cm_transient',
+			'postID': postID,
+			'expiration': expiration,
+			'transient': transient,
+			'maskURL': maskURL,
+		};
+
+		$.post(ajaxurl, data, function(response) {
+			$('.cm-message').remove(); // Prevent weird interaction with existing messages
+			var classes;
+
+			if( response.status == 200 ){
+				$('.content-mask-admin-table-body tr td.cache').each(function(){
+					if( $(this).closest('tr').find('td.url a').text() == cacheFor ){
+						$(this).find('.transient-expiration').text( expirationReadable );
+					}
+				});
+				classes = 'info';
+			} else if( response.status == 400 || response.status == 403 ){
+				classes = 'error';
+			}
+
+			$methodDiv.removeClass('cm-reloading');
+			contentMaskMessage( classes, response.message );
+		}, 'json');
+
+		return false;
+	});
+
 	$('.content-mask-admin-table-body, .column-content-mask').on( 'click', '.method svg, .cm-method svg', function(){
 		var	$clicked     = $(this),
 			restoreIcon  = $clicked.attr('class');

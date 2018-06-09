@@ -4,7 +4,7 @@ Donate Link: http://ko-fi.com/reverendxhynk/
 Tags: Domain Mask, Content Mask, URL Mask, Embed, Redirect, 301, 301 Redirect, Iframe
 Requires at Least: 3.5.1
 Tested Up To: 4.9.6
-Stable tag: 1.4
+Stable tag: 1.4.1
 Author URI: https://github.com/Xhynk
 Plugin URL: https://xhynk.com/content-mask/
 License: GPLv2 or later
@@ -43,6 +43,13 @@ Notes:
 3. Notice the URL hasn't changed at all using the download or iframe method, but the content is 100% replaced on the front end with the Content Mask URL's content.
 
 == Changelog ==
+= 1.4.1 =
+* Modified the Content Mask admin page table layout
+* The Mask URL column is now linked and clickable.
+* Cache Expiration column has been added.
+* Cache may be refreshed by clicking on Refresh in the Cache Expiration column (shows on row hover).
+* Edit and View columns have been removed.
+* Edit and View links have been added to to the Title column (shows on row hover)
 
 = 1.4 =
 * Cache (WP Transient) Duration for the Download Method can now be controlled with common values from 1 hour to 4 weeks.

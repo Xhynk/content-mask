@@ -3,7 +3,7 @@
 	* Plugin Name:	Content Mask
 	* Plugin URI:	http://xhynk.com/content-mask/
 	* Description:	Easily embed external content into your website without complicated Domain Forwarders, Domain Masks, APIs or Scripts
-	* Version:		1.4
+	* Version:		1.4.1
 	* Author:		Alex Demchak
 	* Author URI:	https://github.com/xhynk
 
@@ -45,9 +45,10 @@ class ContentMask {
 		add_action( 'template_redirect', [$this, 'process_page_request'], 1, 2 );
 		add_action( 'admin_enqueue_scripts', [$this, 'enqueue_admin_assets'] );
 		add_action( 'admin_enqueue_scripts', [$this, 'global_admin_assets'] );
-		add_action( 'wp_ajax_toggle_content_mask', [$this, 'toggle_content_mask'] );
-		add_action( 'manage_posts_custom_column' , [$this, 'content_mask_column_content'], 10, 2 );
-		add_action( 'manage_pages_custom_column' , [$this, 'content_mask_column_content'], 10, 2 );
+		add_action( 'wp_ajax_toggle_content_mask',  [$this, 'toggle_content_mask'] );
+		add_action( 'wp_ajax_refresh_cm_transient', [$this, 'refresh_cm_transient'] );
+		add_action( 'manage_posts_custom_column' ,  [$this, 'content_mask_column_content'], 10, 2 );
+		add_action( 'manage_pages_custom_column' ,  [$this, 'content_mask_column_content'], 10, 2 );
 
 		add_filter( 'manage_posts_columns', [$this, 'content_mask_column'] );
 		add_filter( 'manage_pages_columns', [$this, 'content_mask_column'] );
@@ -99,6 +100,16 @@ class ContentMask {
 		);
 	}
 
+	public function get_transient_expiration( $transient ){
+		$now = time();
+		$expires  = get_option( '_transient_timeout_'.$transient );
+
+		if( empty( $expires ) ) return 'Does Not Expire';
+		if( $now > $expires )   return 'Expired';
+
+		return human_time_diff( $now, $expires );
+	}
+
 	public function admin_overview(){
 		if( !current_user_can( 'edit_posts' ) ){
 			wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
@@ -127,17 +138,15 @@ class ContentMask {
 									<th class="method"><div>Method</div></th>
 									<th class="title"><div>Title</div></th>
 									<th class="url"><div>Mask URL</div></th>
+									<th class="cache"><div>Cache Expires</div></th>
 									<th class="post-type"><div>Post Type</div></th>
-									<th class="edit"><div>Edit</div></th>
-									<th class="view"><div>View</div></th>
 								</tr>
 								<tr class="invisible">
 									<th>Method</th>
 									<th>Title</th>
 									<th>Mask URL</th>
+									<th>Cache Expires</th>
 									<th>Post Type</th>
-									<th>Edit</th>
-									<th>View</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -155,11 +164,18 @@ class ContentMask {
 												else if( $content_mask_method === 'iframe' ) { echo $this->display_svg( 'iframe', 'icon', 'title="Iframe"' ); }
 												else if( $content_mask_method === 'redirect' ) { echo $this->display_svg( 'redirect', 'icon', 'title="Redirect (301)"' ); }
 											?></div></td>
-											<td class="title"><div><?= get_the_title(); ?></div></td>
-											<td class="url"><div><?= $content_mask_url; ?></div></td>
+											<td class="title"><div><span><?= get_the_title(); ?><span><span class="row-actions"> - <a href="<?= get_edit_post_link(); ?>">Edit</a> | <a href="<?= get_permalink(); ?>">View</a></div></td>
+											<td class="url"><div><a href="<?= $content_mask_url; ?>" target="_blank"><?= $content_mask_url; ?></a></div></td>
+											<td class="cache"><div><?php
+												$transient = 'content_mask-'. strtolower( preg_replace( "/[^a-z0-9]/", '', $content_mask_url ) );
+												echo '<span class="transient-expiration">'. $this->get_transient_expiration( $transient ) .'</span>';
+												$data_expiration = $content_mask_transient_expiration ? $this->time_to_seconds( $content_mask_transient_expiration ) : $this->time_to_seconds( '4 hour' );
+												$data_expiration_readable = $content_mask_transient_expiration ? $content_mask_transient_expiration : '4 hours';
+												echo '<span class="row-actions"> - <a href="#" data-expiration-readable="'. $data_expiration_readable .'" data-expiration="'. $data_expiration .'" data-transient="'. $transient .'">Refresh</a></span>';
+											?></div></td>
 											<td class="post-type"><div data-post-status="<?= get_post_status(); ?>"><?= get_post_type(); ?></div></td>
-											<td class="edit"><div><a class="wp-core-ui button" href="<?= get_edit_post_link(); ?>">Edit</a></div></td>
-											<td class="view"><div><a target="_blank" class="wp-core-ui button-primary" href="<?= get_permalink(); ?>">View</a></div></td>
+											<?php /* <td class="edit"><div><a class="wp-core-ui button" href="<?= get_edit_post_link(); ?>">Edit</a></div></td> */ ?>
+											<?php /* <td class="view"><div><a target="_blank" class="wp-core-ui button-primary" href="<?= get_permalink(); ?>">View</a></div></td> */ ?>
 										</tr>
 									<?php } ?>
 								<?php } else { ?>
@@ -232,6 +248,31 @@ class ContentMask {
 		} else {
 			$response['status']  = 400;
 			$response['message'] = 'Request failed.';
+		}
+
+		echo json_encode( $response );
+		wp_die();
+	}
+
+	public function refresh_cm_transient() {
+		extract( $_POST );
+		$response = [];
+
+		$body = wp_remote_retrieve_body( wp_remote_get( $maskURL ) );
+		$body = $this->replace_relative_urls( $maskURL, $body );
+
+		if( !strlen( $body > 125 ) ){
+			delete_transient( $transient );
+			if( set_transient( $transient, $body, $expiration ) ){
+				$response['status']  = 200;
+				$response['message'] = 'Mask Cache for <strong>'. get_the_title( $postID ) .'</strong> Refreshed!';
+			} else {
+				$response['status']  = 400;
+				$response['message'] = 'Mask Cache Refresh for '. get_the_title( $postID ) .' Failed.';
+			}
+		} else {
+			$response['status']  = 400;
+			$response['message'] = 'Remote Content Mask URL for '. get_the_title( $postID ) .' could not be reached.';
 		}
 
 		echo json_encode( $response );

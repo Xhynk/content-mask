@@ -37,6 +37,8 @@
 	right: 0;
 	z-index: 10;
 	box-shadow: 0 5px 15px -8px rgba(0,0,0,.5);
+	max-height: 265px;
+    overflow-y: auto;
 }
 
 .cm-url-container {
