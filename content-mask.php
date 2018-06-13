@@ -5,7 +5,7 @@
 	* Description:	Easily embed external content into your website without complicated Domain Forwarders, Domain Masks, APIs or Scripts
 	* Version:		1.4.2
 	* Author:		Alex Demchak
-	* Author URI:	https://github.com/xhynk
+	* Author URI:	http://xhynk.com/
 
 	*	Copyright Third River Marketing, LLC, Alex Demchak
 
