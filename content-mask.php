@@ -3,7 +3,7 @@
 	* Plugin Name:	Content Mask
 	* Plugin URI:	http://xhynk.com/content-mask/
 	* Description:	Easily embed external content into your website without complicated Domain Forwarders, Domain Masks, APIs or Scripts
-	* Version:		1.4.1
+	* Version:		1.4.2
 	* Author:		Alex Demchak
 	* Author URI:	https://github.com/xhynk
 
@@ -42,7 +42,8 @@ class ContentMask {
 		add_action( 'save_post', [$this, 'save_meta'], 10, 1 );
 		add_action( 'admin_menu', [$this, 'add_overview_menu'] );
 		add_action( 'add_meta_boxes', [$this, 'add_meta_boxes'], 1, 2 );
-		add_action( 'template_redirect', [$this, 'process_page_request'], 1, 2 );
+		//add_action( 'template_redirect', [$this, 'process_page_request'], 1, 2 );
+		add_action( 'after_setup_theme', [$this, 'process_page_request'], 1, 2 );
 		add_action( 'admin_enqueue_scripts', [$this, 'enqueue_admin_assets'] );
 		add_action( 'admin_enqueue_scripts', [$this, 'global_admin_assets'] );
 		add_action( 'wp_ajax_toggle_content_mask',  [$this, 'toggle_content_mask'] );
@@ -104,8 +105,8 @@ class ContentMask {
 		$now = time();
 		$expires  = get_option( '_transient_timeout_'.$transient );
 
-		if( empty( $expires ) ) return 'Does Not Expire';
 		if( $now > $expires )   return 'Expired';
+		if( empty( $expires ) ) return 'Does Not Expire';
 
 		return human_time_diff( $now, $expires );
 	}
@@ -164,7 +165,7 @@ class ContentMask {
 												else if( $content_mask_method === 'iframe' ) { echo $this->display_svg( 'iframe', 'icon', 'title="Iframe"' ); }
 												else if( $content_mask_method === 'redirect' ) { echo $this->display_svg( 'redirect', 'icon', 'title="Redirect (301)"' ); }
 											?></div></td>
-											<td class="title"><div><span><?= get_the_title(); ?><span><span class="row-actions"> - <a href="<?= get_edit_post_link(); ?>">Edit</a> | <a href="<?= get_permalink(); ?>">View</a></div></td>
+											<td class="title"><div><span><a target="_blank" href="<?= get_permalink(); ?>"><strong><?= get_the_title(); ?></strong></a><span><span class="row-actions"> - <a href="<?= get_edit_post_link(); ?>">Edit</a> | <a target="_blank" href="<?= get_permalink(); ?>">View</a></div></td>
 											<td class="url"><div><a href="<?= $content_mask_url; ?>" target="_blank"><?= $content_mask_url; ?></a></div></td>
 											<td class="cache"><div><?php
 												$transient = 'content_mask-'. strtolower( preg_replace( "/[^a-z0-9]/", '', $content_mask_url ) );
@@ -316,125 +317,112 @@ class ContentMask {
 
 	public function get_page_content( $url, $expiration = 14400 ){
 		## Download the Content Mask URL into the page content, overriding everything.
-		if( $this->validate_url( $url ) === true ){
-			$transient_name = 'content_mask-'. strtolower( preg_replace( "/[^a-z0-9]/", '', $url ) );
+		$transient_name = 'content_mask-'. strtolower( preg_replace( "/[^a-z0-9]/", '', $url ) );
 
-			/**
-			 * As of 1.2.2, check strlen of transient to make sure it's not a blank
-			 * HTML document, such as if the page request failed.
-			 */
+		/**
+		 * As of 1.2.2, check strlen of transient to make sure it's not a blank
+		 * HTML document, such as if the page request failed.
+		 */
 
-			$transient = get_transient( $transient_name );
+		$transient = get_transient( $transient_name );
+		if( false === ( $transient ) || strlen( $transient ) < 125  ){
+			$body = wp_remote_retrieve_body( wp_remote_get( $url ) );
+			$body = $this->replace_relative_urls( $url, $body );
 
-			if( false === ( $transient ) || strlen( $transient ) < 125  ){
-				$body = wp_remote_retrieve_body( wp_remote_get( $url ) );
-				$body = $this->replace_relative_urls( $url, $body );
+			set_transient( $transient_name, $body, $expiration );
 
-				set_transient( $transient_name, $body, $expiration );
-
-				return $body;
-			} else {
-				return $transient;
-			}
+			return $body;
 		} else {
-			// Not a valid URL.
-			return;
+			return $transient;
 		}
 	}
 
 	public function get_page_iframe( $url ){
 		## Replace the content with a full size iframe, useful if a URL has relatively URLs or only serves to whitelisted IPs
-		if( $this->validate_url( $url ) === true ){
-			if( has_site_icon() ) $favicon = '<link class="wp_favicon" href="'. get_site_icon_url() .'" rel="shortcut icon"/>';
+		if( has_site_icon() ) $favicon = '<link class="wp_favicon" href="'. get_site_icon_url() .'" rel="shortcut icon"/>';
 
-			/**
-			 * If a URL doesn't have a protocol, we force http:// on it since not all
-			 * sites will be secured, but many secure sites forward to https://. HOWEVER
-			 * insecure iframes won't get displayed on secured sites. So we force change
-			 * it to https:// - if it doesn't show up then it wouldn't have shown up any-
-			 * ways due to being insecure.
-			 */
-			$url = is_ssl() ? str_replace( 'http://', 'https://', esc_url( $url ) ) : esc_url( $url );
+		/**
+		 * If a URL doesn't have a protocol, we force http:// on it since not all
+		 * sites will be secured, but many secure sites forward to https://. HOWEVER
+		 * insecure iframes won't get displayed on secured sites. So we force change
+		 * it to https:// - if it doesn't show up then it wouldn't have shown up any-
+		 * ways due to being insecure.
+		 */
+		$url = is_ssl() ? str_replace( 'http://', 'https://', esc_url( $url ) ) : esc_url( $url );
 
-			return '<!DOCTYPE html>
-				<head>
-					'.$favicon.'
-					<style>
-						body { margin: 0; }
-						iframe {
-							display: block;
-							border: none;
-							height: 100vh;
-							width: 100vw;
-						}
-					</style>
-					<meta name="viewport" content="width=device-width, initial-scale=1">
-				</head>
-				<body>
-					<iframe width="100%" height="100%" src="'. $url .'" frameborder="0" allowfullscreen></iframe>
-				</body>
-			</html>';
-		} else {
-			// Not a valid URL
-			return;
-		}
+		return '<!DOCTYPE html>
+			<head>
+				'.$favicon.'
+				<style>
+					body { margin: 0; }
+					iframe {
+						display: block;
+						border: none;
+						height: 100vh;
+						width: 100vw;
+					}
+				</style>
+				<meta name="viewport" content="width=device-width, initial-scale=1">
+			</head>
+			<body>
+				<iframe width="100%" height="100%" src="'. $url .'" frameborder="0" allowfullscreen></iframe>
+			</body>
+		</html>';
 	}
 
 	public function show_post( $post_id ){
 		extract( $this->get_post_fields( $post_id ) );
 		$url = esc_url( $content_mask_url );
 
-		if( $this->validate_url( $url ) === true ){
-			$method = sanitize_text_field( $content_mask_method );
+		$method = sanitize_text_field( $content_mask_method );
 
-			if( $method === 'download' ) echo $this->get_page_content( $url, $this->time_to_seconds( $content_mask_transient_expiration ) );
-			else if( $method === 'iframe' ) echo $this->get_page_iframe( $url );
-			else if( $method === 'redirect' ) wp_redirect( $url, 301 );
-			else echo $this->get_page_content( $url, $this->time_to_seconds( $content_mask_transient_expiration ) );
+			 if( $method === 'download' ) echo $this->get_page_content( $url, $this->time_to_seconds( $content_mask_transient_expiration ) );
+		else if( $method === 'iframe' )   echo $this->get_page_iframe( $url );
+		else if( $method === 'redirect' ) wp_redirect( $url, 301 );
+		else echo $this->get_page_content( $url, $this->time_to_seconds( $content_mask_transient_expiration ) );
 
-			exit();
-		} else {
-			wp_die( "{$this::$label} URL is invalid" );
-		}
 		exit();
 	}
 
 	public function process_page_request() {
-		## Let's see if we should do anything about this page request
-		global $post;
+		if( !is_admin() ){
+			if( $post_id = url_to_postid( $_SERVER['REQUEST_URI'], '_wpg_def_keyword', true ) ){
+				$post = get_post( $post_id );
 
-		// Not singular, don't display (such as archive pages, post lists, etc. )
-		if( !is_singular() ) return;
+				extract( $this->get_post_fields( $post->ID ) );
 
-		// 404 has no custom fields
-		if( is_404() ) return;
+				if( isset( $content_mask_enable ) ){
+					if( filter_var( $content_mask_enable, FILTER_VALIDATE_BOOLEAN ) ){
+						// One of our Content Mask pages that's turned ON, continue
 
-		extract( $this->get_post_fields( $post->ID ) );
+						// Sanitize the URL displayed
+						if( $this->validate_url( $content_mask_url ) === true ){
+							// It's a valid URL
 
-		if( isset( $content_mask_enable ) ){
-			if( filter_var( $content_mask_enable, FILTER_VALIDATE_BOOLEAN ) ){
-				// One of our Content Mask pages that's turned ON, continue
+							// Remove BS Hooked scripts and junk from this request
+							foreach( ['wp_footer', 'wp_head', 'wp_enqueue_scripts', 'wp_print_scripts'] as $hook )
+								remove_all_actions( $hook );
 
-				// Sanitize the URL displayed
-				if( $this->validate_url( $content_mask_url ) === true ){
-					// It's a valid URL, do the thing
-					$this->show_post( $post->ID );
+							// Display the Embeded Content
+							$this->show_post( $post->ID );
+						} else {
+							// It's not a valid URL, display an error message;
+							add_action( 'wp_footer', function(){
+								if( is_user_logged_in() )
+									echo '<div style="border-left: 4px solid #c00; box-shadow: 0 5px 12px -4px rgba(0,0,0,.5); background: #fff; padding: 12px 24px; z-index: 16777271; position: fixed; top: 42px; left: 10px; right: 10px;">It looks like you have enabled a '. $this::$label .' on this post, but don\'t have a valid URL. <a style="display: inline-block; text-decoration: none; font-size: 13px; line-height: 26px; height: 28px; margin: 0; padding: 0 10px 1px; cursor: pointer; border-width: 1px; border-style: solid; -webkit-appearance: none; border-radius: 3px; white-space: nowrap; box-sizing: border-box; background: #0085ba; border-color: #0073aa #006799 #006799; box-shadow: 0 1px 0 #006799; color: #fff; text-decoration: none; text-shadow: 0 -1px 1px #006799, 1px 0 1px #006799, 0 1px 1px #006799, -1px 0 1px #006799; float: right;" class="wp-core-ui button primary" href="'. get_edit_post_link() .'#content_mask_url">Edit '. $this::$label .'</a></div>';
+							});
+
+							return; // Failed URL test
+						}
+					} else {
+						return; // Failed to have Content Mask Enabled set to `true`
+					}
 				} else {
-					// It's not a valid URL, display an error message;
-					add_action( 'wp_footer', function(){
-						if( is_user_logged_in() )
-							echo '<div style="border-left: 4px solid #c00; box-shadow: 0 5px 12px -4px rgba(0,0,0,.5); background: #fff; padding: 12px 24px; z-index: 16777271; position: fixed; top: 42px; left: 10px; right: 10px;">It looks like you have enabled a '. $this::$label .' on this post, but don\'t have a valid URL. <a style="display: inline-block; text-decoration: none; font-size: 13px; line-height: 26px; height: 28px; margin: 0; padding: 0 10px 1px; cursor: pointer; border-width: 1px; border-style: solid; -webkit-appearance: none; border-radius: 3px; white-space: nowrap; box-sizing: border-box; background: #0085ba; border-color: #0073aa #006799 #006799; box-shadow: 0 1px 0 #006799; color: #fff; text-decoration: none; text-shadow: 0 -1px 1px #006799, 1px 0 1px #006799, 0 1px 1px #006799, -1px 0 1px #006799; float: right;" class="wp-core-ui button primary" href="'. get_edit_post_link() .'#content_mask_url">Edit '. $this::$label .'</a></div>';
-					});
-
-					return; // Failed URL test
+					return; // Enable isn't even set
 				}
-			} else {
-				return; // Failed to have Content Mask Enabled set to `true`
+				return; // Return the original request in all other instances
 			}
-		} else {
-			return; // Enable isn't even set
 		}
-		return; // Return the original request in all other instances
 	}
 
 	public function content_mask_meta_box(){
