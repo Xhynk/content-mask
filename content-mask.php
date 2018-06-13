@@ -3,7 +3,7 @@
 	* Plugin Name:	Content Mask
 	* Plugin URI:	http://xhynk.com/content-mask/
 	* Description:	Easily embed external content into your website without complicated Domain Forwarders, Domain Masks, APIs or Scripts
-	* Version:		1.4.2
+	* Version:		1.4.3
 	* Author:		Alex Demchak
 	* Author URI:	http://xhynk.com/
 
@@ -42,7 +42,6 @@ class ContentMask {
 		add_action( 'save_post', [$this, 'save_meta'], 10, 1 );
 		add_action( 'admin_menu', [$this, 'add_overview_menu'] );
 		add_action( 'add_meta_boxes', [$this, 'add_meta_boxes'], 1, 2 );
-		//add_action( 'template_redirect', [$this, 'process_page_request'], 1, 2 );
 		add_action( 'after_setup_theme', [$this, 'process_page_request'], 1, 2 );
 		add_action( 'admin_enqueue_scripts', [$this, 'enqueue_admin_assets'] );
 		add_action( 'admin_enqueue_scripts', [$this, 'global_admin_assets'] );
@@ -72,18 +71,14 @@ class ContentMask {
 		return isset( $var ) ? $var : $default;
 	}
 
-	public function get_post_fields( $post_id = 0, $cm_only = true ){
-		if( $cm_only ){
-			// Only return CM Fields
+	public function get_post_fields( $post_id = 0, $content_mask_fields_only = true ){
+		if( $content_mask_fields_only ){
 			foreach( $this::$cm_keys as $key ){
 				$keys[$key] = get_post_meta( $post_id, $key, true );
 			}
 		} else {
-			// Return all Custom Fields
 			foreach( get_post_custom( $post_id ) as $key => $val ){
-				if( sizeof( $val ) == 1 ){
-					$keys[$key] = $val[0];
-				}
+				if( sizeof( $val ) == 1 ) $keys[$key] = $val[0];
 			}
 		}
 
@@ -102,8 +97,8 @@ class ContentMask {
 	}
 
 	public function get_transient_expiration( $transient ){
-		$now = time();
-		$expires  = get_option( '_transient_timeout_'.$transient );
+		$now     = time();
+		$expires = get_option( '_transient_timeout_'.$transient );
 
 		if( $now > $expires )   return 'Expired';
 		if( empty( $expires ) ) return 'Does Not Expire';
@@ -175,8 +170,6 @@ class ContentMask {
 												echo '<span class="row-actions"> - <a href="#" data-expiration-readable="'. $data_expiration_readable .'" data-expiration="'. $data_expiration .'" data-transient="'. $transient .'">Refresh</a></span>';
 											?></div></td>
 											<td class="post-type"><div data-post-status="<?= get_post_status(); ?>"><?= get_post_type(); ?></div></td>
-											<?php /* <td class="edit"><div><a class="wp-core-ui button" href="<?= get_edit_post_link(); ?>">Edit</a></div></td> */ ?>
-											<?php /* <td class="view"><div><a target="_blank" class="wp-core-ui button-primary" href="<?= get_permalink(); ?>">View</a></div></td> */ ?>
 										</tr>
 									<?php } ?>
 								<?php } else { ?>
@@ -216,11 +209,11 @@ class ContentMask {
 	}
 
 	public function display_svg( $icon = '', $class = '', $attr = '' ){
-		if( $icon == 'download' ) return '<svg class="'. $class .' content-mask-svg svg-download" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 17 12 21 16 17"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"></path></svg>';
-		else if( $icon == 'iframe' ) return '<svg class="'. $class .' content-mask-svg svg-iframe" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>';
-		else if( $icon == 'redirect' ) return '<svg class="'. $class .' content-mask-svg svg-redirect" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>';
-		else if( $icon == 'arrow-up' ) return '<svg class="'. $class .' content-mask-svg svg-arrow-up" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>';
-		else if( $icon == 'checkmark' ) return '<svg class="'. $class .' content-mask-svg svg-checkmark" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+		if( $icon == 'download' )        return '<svg class="'. $class .' content-mask-svg svg-download" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 17 12 21 16 17"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"></path></svg>';
+		else if( $icon == 'iframe' )     return '<svg class="'. $class .' content-mask-svg svg-iframe" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>';
+		else if( $icon == 'redirect' )   return '<svg class="'. $class .' content-mask-svg svg-redirect" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>';
+		else if( $icon == 'arrow-up' )   return '<svg class="'. $class .' content-mask-svg svg-arrow-up" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>';
+		else if( $icon == 'checkmark' )  return '<svg class="'. $class .' content-mask-svg svg-checkmark" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
 		else if( $icon == 'arrow-down' ) return '<svg class="'. $class .' content-mask-svg svg-arrow-down" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
 		else return '<svg class="content-mask-svg svg-question svg-missing" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12" y2="17"></line></svg>';
 	}
@@ -230,10 +223,10 @@ class ContentMask {
 		$response = [];
 
 		if( $newState == 'enabled' ){
-			$_newState	 = true;
+			$_newState	   = true;
 			$_currentState = false;
 		} else if( $newState == 'disabled' ){
-			$_newState	 = false;
+			$_newState	   = false;
 			$_currentState = true;
 		} else {
 			$response['status']  = 403;
@@ -318,12 +311,7 @@ class ContentMask {
 	public function get_page_content( $url, $expiration = 14400 ){
 		## Download the Content Mask URL into the page content, overriding everything.
 		$transient_name = 'content_mask-'. strtolower( preg_replace( "/[^a-z0-9]/", '', $url ) );
-
-		/**
-		 * As of 1.2.2, check strlen of transient to make sure it's not a blank
-		 * HTML document, such as if the page request failed.
-		 */
-
+		
 		$transient = get_transient( $transient_name );
 		if( false === ( $transient ) || strlen( $transient ) < 125  ){
 			$body = wp_remote_retrieve_body( wp_remote_get( $url ) );
@@ -386,39 +374,41 @@ class ContentMask {
 
 	public function process_page_request() {
 		if( !is_admin() ){
-			if( $post_id = url_to_postid( $_SERVER['REQUEST_URI'], '_wpg_def_keyword', true ) ){
-				$post = get_post( $post_id );
+			if( $post = get_post( url_to_postid( $_SERVER['REQUEST_URI'], '_wpg_def_keyword', true ) ) ){
+				if( !post_password_required( $post->ID ) ){
+					extract( $this->get_post_fields( $post->ID ) );
 
-				extract( $this->get_post_fields( $post->ID ) );
+					if( isset( $content_mask_enable ) ){
+						if( filter_var( $content_mask_enable, FILTER_VALIDATE_BOOLEAN ) ){
+							// One of our Content Mask pages that's turned ON, continue
 
-				if( isset( $content_mask_enable ) ){
-					if( filter_var( $content_mask_enable, FILTER_VALIDATE_BOOLEAN ) ){
-						// One of our Content Mask pages that's turned ON, continue
+							// Sanitize the URL displayed
+							if( $this->validate_url( $content_mask_url ) === true ){
+								// It's a valid URL
 
-						// Sanitize the URL displayed
-						if( $this->validate_url( $content_mask_url ) === true ){
-							// It's a valid URL
+								// Remove BS Hooked scripts and junk from this request
+								foreach( ['wp_footer', 'wp_head', 'wp_enqueue_scripts', 'wp_print_scripts'] as $hook )
+									remove_all_actions( $hook );
 
-							// Remove BS Hooked scripts and junk from this request
-							foreach( ['wp_footer', 'wp_head', 'wp_enqueue_scripts', 'wp_print_scripts'] as $hook )
-								remove_all_actions( $hook );
+								// Display the Embeded Content
+								$this->show_post( $post->ID );
+							} else {
+								// It's not a valid URL, display an error message;
+								add_action( 'wp_footer', function(){
+									if( is_user_logged_in() )
+										echo '<div style="border-left: 4px solid #c00; box-shadow: 0 5px 12px -4px rgba(0,0,0,.5); background: #fff; padding: 12px 24px; z-index: 16777271; position: fixed; top: 42px; left: 10px; right: 10px;">It looks like you have enabled a '. $this::$label .' on this post, but don\'t have a valid URL. <a style="display: inline-block; text-decoration: none; font-size: 13px; line-height: 26px; height: 28px; margin: 0; padding: 0 10px 1px; cursor: pointer; border-width: 1px; border-style: solid; -webkit-appearance: none; border-radius: 3px; white-space: nowrap; box-sizing: border-box; background: #0085ba; border-color: #0073aa #006799 #006799; box-shadow: 0 1px 0 #006799; color: #fff; text-decoration: none; text-shadow: 0 -1px 1px #006799, 1px 0 1px #006799, 0 1px 1px #006799, -1px 0 1px #006799; float: right;" class="wp-core-ui button primary" href="'. get_edit_post_link() .'#content_mask_url">Edit '. $this::$label .'</a></div>';
+								});
 
-							// Display the Embeded Content
-							$this->show_post( $post->ID );
+								return; // Failed URL test
+							}
 						} else {
-							// It's not a valid URL, display an error message;
-							add_action( 'wp_footer', function(){
-								if( is_user_logged_in() )
-									echo '<div style="border-left: 4px solid #c00; box-shadow: 0 5px 12px -4px rgba(0,0,0,.5); background: #fff; padding: 12px 24px; z-index: 16777271; position: fixed; top: 42px; left: 10px; right: 10px;">It looks like you have enabled a '. $this::$label .' on this post, but don\'t have a valid URL. <a style="display: inline-block; text-decoration: none; font-size: 13px; line-height: 26px; height: 28px; margin: 0; padding: 0 10px 1px; cursor: pointer; border-width: 1px; border-style: solid; -webkit-appearance: none; border-radius: 3px; white-space: nowrap; box-sizing: border-box; background: #0085ba; border-color: #0073aa #006799 #006799; box-shadow: 0 1px 0 #006799; color: #fff; text-decoration: none; text-shadow: 0 -1px 1px #006799, 1px 0 1px #006799, 0 1px 1px #006799, -1px 0 1px #006799; float: right;" class="wp-core-ui button primary" href="'. get_edit_post_link() .'#content_mask_url">Edit '. $this::$label .'</a></div>';
-							});
-
-							return; // Failed URL test
+							return; // Failed to have Content Mask Enabled set to `true`
 						}
 					} else {
-						return; // Failed to have Content Mask Enabled set to `true`
+						return; // Enable isn't even set
 					}
 				} else {
-					return; // Enable isn't even set
+					// Password Required
 				}
 				return; // Return the original request in all other instances
 			}

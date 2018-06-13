@@ -4,7 +4,7 @@ Donate Link: http://ko-fi.com/reverendxhynk/
 Tags: Embed, Domain Mask, Mask, Redirect, URL Mask
 Requires at Least: 3.6
 Tested Up To: 4.9.6
-Stable tag: 1.4.2
+Stable tag: 1.4.3
 Requires PHP: 5.4
 Author URI: https://xhynk.com/
 Plugin URL: https://xhynk.com/content-mask/
@@ -44,6 +44,11 @@ Notes:
 3. Notice that the URL has remained unchanged, but when Content Mask is enabled, it fully and seamlessly replaces all of the content on that permalink with the content from the Content Mask URL.
 
 == Changelog ==
+= 1.4.3 =
+* Content Masked pages now respect the Password Protected visibility status.
+* When a Content Masked page is Password Protected, it shows the default page with the standard password form. Once the password is successfully submitted, the Content Mask will perform as usual.
+* Removed superfluous and/or commented out code that's no longer used.
+
 = 1.4.2 =
 * To speed up Content Mask time, the page processing function has been moved to an earlier hook.
 * Redundant URL Validity checks have been removed.
