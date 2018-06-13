@@ -1,12 +1,12 @@
 === Content Mask ===
-Contributors: Alex Demchak
+Contributors: alexdemchak
 Donate Link: http://ko-fi.com/reverendxhynk/
-Tags: Domain Mask, Content Mask, URL Mask, Embed, Redirect, 301, 301 Redirect, Iframe
-Requires at Least: 3.5.1
+Tags: Embed, Domain Mask, Mask, Redirect, URL Mask
+Requires at Least: 3.6
 Tested Up To: 4.9.6
 Stable tag: 1.4.2
 Requires PHP: 5.4
-Author URI: https://github.com/Xhynk
+Author URI: https://xhynk.com/
 Plugin URL: https://xhynk.com/content-mask/
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -17,31 +17,31 @@ Embed or link to external content on any Page, Post, or Custom Post Type without
 
 [Read More About Content Mask](https://xhynk.com/content-mask/)
 
-Content Mask allows you to embed any external content onto your own WordPress Pages, Posts, and Custom Post types. The end result is similar to setting up a [domain mask](http://www.networksolutions.com/support/what-is-web-forwarding-and-masking/) though the content is embedded into the front end of your website.
+Content Mask allows you to embed any external content onto your own WordPress Pages, Posts, and Custom Post types. The end result is similar to setting up a [domain mask](http://www.networksolutions.com/support/what-is-web-forwarding-and-masking/) though the content is embedded into the front end of your website and is fully contained inside your WordPress permalink ecosystem.
 
-With a simple 2-Step UI, you can download and embed external content into your website, just enable the Content Mask on any Page, Post, or Custom Post type and put in the URL that contains the content you want.
+With a simple 2-Step UI, you can embed any external content into your website. Simple enable the Content Mask on any Page, Post, or Custom Post type by clicking on the check mark; Then put in the URL that contains the content you want to embed.
 
-- Using the Download method will fetch the content from the host URL via a cURL request and embed it on the page. As of version 1.2, relative URLs in the `src`, `href`, and `action` attributes are replaced with the absolute URL equivalent.
+- Using the Download (default) method will fetch the content from the Content Mask URL, cache it on your website, and replace the current page request with that content.
 
 - Using the Iframe method will replace the current page request with a full width/height, frameless iframe containing the host URL. This method is ideal if you rely on whitelisted IP/domain names for certain functionality including serving scripts, styles, and images.
 
-- Using the Redirect (301) method will just redirect the visitor to the host URL.
+- Using the Redirect (301) method will simply redirect the visitor to the host URL.
 
 Notes:
 
- - Please confirm you're allowed to utilize and embed the content before using any particular URL, don't Content Mask any content you don't have license to share or use.
+ - Please confirm you're allowed to utilize and embed the content before embedding any particular URL, don't Content Mask any content you don't have license to share or use.
  
- - Content embedded using the Download method is cached using the [WordPress Transients API](https://codex.wordpress.org/Transients_API) for 4 hours by default to prevent hammering the host URL with additional traffic. If the content is updated and you would like a fresh copy, you may just click the "Update" button on the Page, Post, or Custom Post Type to refresh the transient. You may also change the cache expiration timer per page.
+ - Content embedded using the Download method is cached using the [WordPress Transients API](https://codex.wordpress.org/Transients_API) for 4 hours by default. If the content on the external URL is updated and you would like a fresh copy, you may just click the "Update" button on the Page, Post, or Custom Post Type to refresh the transient, or click the "Refresh" link in the Content Mask Admin panel. You may also change the cache expiration timer per page anywhere from "Never" to "4 weeks".
 
- - You may use the Transients Manager plugin to manage transients stored with the Download method. All Content Mask related transients contain the prefix "content_mask-" plus a stripped version of the Content Mask URL, such as "content_mask-httpxhynkcom".
+ - You may use the [Transients Manager](https://wordpress.org/plugins/transients-manager/) plugin to manage transients stored with the Download method. All Content Mask related transients contain the prefix "content_mask-" plus a stripped version of the Content Mask URL, such as "content_mask-httpxhynkcom".
 
 [Read More About Content Mask](https://xhynk.com/content-mask/)
 
 == Screenshots ==
 
-1. Enable the Content Mask, set the Content Mask URL (the URL of the content you want to embed), and choose the Content Mask Method (Download, Iframe, or Redirect (301)).
-2. See a list of all of the Content Masked pages, as well as their settings. Quickly enable/disable with a single click. Limited to posts/pages the current user can edit.
-3. Notice the URL hasn't changed at all using the download or iframe method, but the content is 100% replaced on the front end with the Content Mask URL's content.
+1. Enable the Content Mask with the ? - Put in the URL of the content you would like to embed. Done! Optionally, choose a different method (Download, Iframe, or Redirect). If using the download method, you may also change the cache duration from never up to 4 weeks (you may refresh the cache at any point manually).
+2. The Content Mask Admin Panel shows a list of all Content Mask pages/posts and their current settings. Quickly enable or disable the Content Mask with a single click on the Method icon. The cache may also be refreshed from this page. Only pages/posts that the current user can edit are displayed.
+3. Notice that the URL has remained unchanged, but when Content Mask is enabled, it fully and seamlessly replaces all of the content on that permalink with the content from the Content Mask URL.
 
 == Changelog ==
 = 1.4.2 =
