@@ -4,7 +4,7 @@ Donate Link: http://ko-fi.com/reverendxhynk/
 Tags: Embed, Domain Mask, Mask, Redirect, URL Mask
 Requires at Least: 3.6
 Tested Up To: 4.9.6
-Stable tag: 1.4.3
+Stable tag: 1.4.3.1
 Requires PHP: 5.4
 Author URI: https://xhynk.com/
 Plugin URL: https://xhynk.com/content-mask/
@@ -44,6 +44,11 @@ Notes:
 3. Notice that the URL has remained unchanged, but when Content Mask is enabled, it fully and seamlessly replaces all of the content on that permalink with the content from the Content Mask URL.
 
 == Changelog ==
+= 1.4.3.1 =
+* Removed the Cache Refresh option in the Content Mask Admin page for Masks set to Iframe and Redirect (since those methods aren't cacheable)
+* Reverted the change made in 1.4.2 and moved the Page Processing function back to the template Redirect Hook. It was causing issues with homepage redirection.
+* Password protection and removal have extraneous scripts has been added to this version of the Page Processing function as well.
+
 = 1.4.3 =
 * Content Masked pages now respect the Password Protected visibility status.
 * When a Content Masked page is Password Protected, it shows the default page with the standard password form. Once the password is successfully submitted, the Content Mask will perform as usual.

@@ -3,7 +3,7 @@
 	* Plugin Name:	Content Mask
 	* Plugin URI:	http://xhynk.com/content-mask/
 	* Description:	Easily embed external content into your website without complicated Domain Forwarders, Domain Masks, APIs or Scripts
-	* Version:		1.4.3
+	* Version:		1.4.3.1
 	* Author:		Alex Demchak
 	* Author URI:	http://xhynk.com/
 
@@ -42,7 +42,7 @@ class ContentMask {
 		add_action( 'save_post', [$this, 'save_meta'], 10, 1 );
 		add_action( 'admin_menu', [$this, 'add_overview_menu'] );
 		add_action( 'add_meta_boxes', [$this, 'add_meta_boxes'], 1, 2 );
-		add_action( 'after_setup_theme', [$this, 'process_page_request'], 1, 2 );
+		add_action( 'template_redirect', [$this, 'process_page_request'], 1, 2 );
 		add_action( 'admin_enqueue_scripts', [$this, 'enqueue_admin_assets'] );
 		add_action( 'admin_enqueue_scripts', [$this, 'global_admin_assets'] );
 		add_action( 'wp_ajax_toggle_content_mask',  [$this, 'toggle_content_mask'] );
@@ -163,11 +163,15 @@ class ContentMask {
 											<td class="title"><div><span><a target="_blank" href="<?= get_permalink(); ?>"><strong><?= get_the_title(); ?></strong></a><span><span class="row-actions"> - <a href="<?= get_edit_post_link(); ?>">Edit</a> | <a target="_blank" href="<?= get_permalink(); ?>">View</a></div></td>
 											<td class="url"><div><a href="<?= $content_mask_url; ?>" target="_blank"><?= $content_mask_url; ?></a></div></td>
 											<td class="cache"><div><?php
-												$transient = 'content_mask-'. strtolower( preg_replace( "/[^a-z0-9]/", '', $content_mask_url ) );
-												echo '<span class="transient-expiration">'. $this->get_transient_expiration( $transient ) .'</span>';
-												$data_expiration = $content_mask_transient_expiration ? $this->time_to_seconds( $content_mask_transient_expiration ) : $this->time_to_seconds( '4 hour' );
-												$data_expiration_readable = $content_mask_transient_expiration ? $content_mask_transient_expiration : '4 hours';
-												echo '<span class="row-actions"> - <a href="#" data-expiration-readable="'. $data_expiration_readable .'" data-expiration="'. $data_expiration .'" data-transient="'. $transient .'">Refresh</a></span>';
+												if( $content_mask_method === 'iframe' || $content_mask_method === 'redirect' ){
+													echo '<span style="opacity:.4;">N/A</span>';
+												} else {
+													$transient = 'content_mask-'. strtolower( preg_replace( "/[^a-z0-9]/", '', $content_mask_url ) );
+													echo '<span class="transient-expiration">'. $this->get_transient_expiration( $transient ) .'</span>';
+													$data_expiration = $content_mask_transient_expiration ? $this->time_to_seconds( $content_mask_transient_expiration ) : $this->time_to_seconds( '4 hour' );
+													$data_expiration_readable = $content_mask_transient_expiration ? $content_mask_transient_expiration : '4 hours';
+													echo '<span class="row-actions"> - <a href="#" data-expiration-readable="'. $data_expiration_readable .'" data-expiration="'. $data_expiration .'" data-transient="'. $transient .'">Refresh</a></span>';
+												}
 											?></div></td>
 											<td class="post-type"><div data-post-status="<?= get_post_status(); ?>"><?= get_post_type(); ?></div></td>
 										</tr>
@@ -373,46 +377,46 @@ class ContentMask {
 	}
 
 	public function process_page_request() {
-		if( !is_admin() ){
-			if( $post = get_post( url_to_postid( $_SERVER['REQUEST_URI'], '_wpg_def_keyword', true ) ) ){
-				if( !post_password_required( $post->ID ) ){
-					extract( $this->get_post_fields( $post->ID ) );
+		## Let's see if we should do anything about this page request
+		global $post;
 
-					if( isset( $content_mask_enable ) ){
-						if( filter_var( $content_mask_enable, FILTER_VALIDATE_BOOLEAN ) ){
-							// One of our Content Mask pages that's turned ON, continue
+		// Not singular, don't display (such as archive pages, post lists, etc. )
+		if( !is_singular() ) return;
 
-							// Sanitize the URL displayed
-							if( $this->validate_url( $content_mask_url ) === true ){
-								// It's a valid URL
+		// 404 has no custom fields
+		if( is_404() ) return;
 
-								// Remove BS Hooked scripts and junk from this request
-								foreach( ['wp_footer', 'wp_head', 'wp_enqueue_scripts', 'wp_print_scripts'] as $hook )
-									remove_all_actions( $hook );
+		extract( $this->get_post_fields( $post->ID ) );
 
-								// Display the Embeded Content
-								$this->show_post( $post->ID );
-							} else {
-								// It's not a valid URL, display an error message;
-								add_action( 'wp_footer', function(){
-									if( is_user_logged_in() )
-										echo '<div style="border-left: 4px solid #c00; box-shadow: 0 5px 12px -4px rgba(0,0,0,.5); background: #fff; padding: 12px 24px; z-index: 16777271; position: fixed; top: 42px; left: 10px; right: 10px;">It looks like you have enabled a '. $this::$label .' on this post, but don\'t have a valid URL. <a style="display: inline-block; text-decoration: none; font-size: 13px; line-height: 26px; height: 28px; margin: 0; padding: 0 10px 1px; cursor: pointer; border-width: 1px; border-style: solid; -webkit-appearance: none; border-radius: 3px; white-space: nowrap; box-sizing: border-box; background: #0085ba; border-color: #0073aa #006799 #006799; box-shadow: 0 1px 0 #006799; color: #fff; text-decoration: none; text-shadow: 0 -1px 1px #006799, 1px 0 1px #006799, 0 1px 1px #006799, -1px 0 1px #006799; float: right;" class="wp-core-ui button primary" href="'. get_edit_post_link() .'#content_mask_url">Edit '. $this::$label .'</a></div>';
-								});
+		if( !post_password_required( $post->ID ) ){
+			if( isset( $content_mask_enable ) ){
+				if( filter_var( $content_mask_enable, FILTER_VALIDATE_BOOLEAN ) ){
+					// One of our Content Mask pages that's turned ON, continue
 
-								return; // Failed URL test
-							}
-						} else {
-							return; // Failed to have Content Mask Enabled set to `true`
-						}
+					// Sanitize the URL displayed
+					if( $this->validate_url( $content_mask_url ) === true ){
+						// Remove BS Hooked scripts and junk from this request
+						foreach( ['wp_footer', 'wp_head', 'wp_enqueue_scripts', 'wp_print_scripts'] as $hook )
+							remove_all_actions( $hook );
+
+						$this->show_post( $post->ID );
 					} else {
-						return; // Enable isn't even set
+						// It's not a valid URL, display an error message;
+						add_action( 'wp_footer', function(){
+							if( is_user_logged_in() )
+								echo '<div style="border-left: 4px solid #c00; box-shadow: 0 5px 12px -4px rgba(0,0,0,.5); background: #fff; padding: 12px 24px; z-index: 16777271; position: fixed; top: 42px; left: 10px; right: 10px;">It looks like you have enabled a '. $this::$label .' on this post, but don\'t have a valid URL. <a style="display: inline-block; text-decoration: none; font-size: 13px; line-height: 26px; height: 28px; margin: 0; padding: 0 10px 1px; cursor: pointer; border-width: 1px; border-style: solid; -webkit-appearance: none; border-radius: 3px; white-space: nowrap; box-sizing: border-box; background: #0085ba; border-color: #0073aa #006799 #006799; box-shadow: 0 1px 0 #006799; color: #fff; text-decoration: none; text-shadow: 0 -1px 1px #006799, 1px 0 1px #006799, 0 1px 1px #006799, -1px 0 1px #006799; float: right;" class="wp-core-ui button primary" href="'. get_edit_post_link() .'#content_mask_url">Edit '. $this::$label .'</a></div>';
+						});
+
+						return; // Failed URL test
 					}
 				} else {
-					// Password Required
+					return; // Failed to have Content Mask Enabled set to `true`
 				}
-				return; // Return the original request in all other instances
+			} else {
+				return; // Enable isn't even set
 			}
 		}
+		return; // Return the original request in all other instances
 	}
 
 	public function content_mask_meta_box(){
