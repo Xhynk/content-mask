@@ -3,7 +3,7 @@
 	* Plugin Name:	Content Mask
 	* Plugin URI:	http://xhynk.com/content-mask/
 	* Description:	Easily embed external content into your website without complicated Domain Forwarders, Domain Masks, APIs or Scripts
-	* Version:		1.4.3.1
+	* Version:		1.4.4
 	* Author:		Alex Demchak
 	* Author URI:	http://xhynk.com/
 
@@ -27,9 +27,7 @@ class ContentMask {
 	private static $instance;
 
 	public static $label	= 'Content Mask';
-	public static $lc_label = 'content-mask';
-
-	public static $cm_keys  = ['content_mask_url', 'content_mask_enable', 'content_mask_method', 'content_mask_transient_expiration'];
+	public static $cm_keys  = ['content_mask_url', 'content_mask_enable', 'content_mask_method', 'content_mask_transient_expiration', 'content_mask_views', 'content_mask_tracking'];
 	public static $content_mask_methods = ['download', 'iframe', 'redirect'];
 
 	public static function get_instance() {
@@ -45,10 +43,15 @@ class ContentMask {
 		add_action( 'template_redirect', [$this, 'process_page_request'], 1, 2 );
 		add_action( 'admin_enqueue_scripts', [$this, 'enqueue_admin_assets'] );
 		add_action( 'admin_enqueue_scripts', [$this, 'global_admin_assets'] );
-		add_action( 'wp_ajax_toggle_content_mask',  [$this, 'toggle_content_mask'] );
-		add_action( 'wp_ajax_refresh_cm_transient', [$this, 'refresh_cm_transient'] );
 		add_action( 'manage_posts_custom_column' ,  [$this, 'content_mask_column_content'], 10, 2 );
 		add_action( 'manage_pages_custom_column' ,  [$this, 'content_mask_column_content'], 10, 2 );
+
+		$ajax_actions = [
+			'toggle_content_mask',
+			'refresh_cm_transient',
+			'toggle_content_mask_tracking',
+		];
+		foreach( $ajax_actions as $action ) add_action( "wp_ajax_$action", [$this, $action] );
 
 		add_filter( 'manage_posts_columns', [$this, 'content_mask_column'] );
 		add_filter( 'manage_pages_columns', [$this, 'content_mask_column'] );
@@ -57,11 +60,13 @@ class ContentMask {
 		add_action( 'wp', function(){
 			if( !is_admin() ){
 				global $et_bloom, $post;
-				extract( $this->get_post_fields( $post->ID ) );
+				if( $post ){
+					extract( $this->get_post_fields( $post->ID ) );
 
-				if( filter_var( $content_mask_enable, FILTER_VALIDATE_BOOLEAN ) ){
-					remove_action( 'wp_footer', [$et_bloom, 'display_flyin'] );
-					remove_action( 'wp_footer', [$et_bloom, 'display_popup'] );
+					if( filter_var( $content_mask_enable, FILTER_VALIDATE_BOOLEAN ) ){
+						remove_action( 'wp_footer', [$et_bloom, 'display_flyin'] );
+						remove_action( 'wp_footer', [$et_bloom, 'display_popup'] );
+					}
 				}
 			}
 		}, 11 );
@@ -90,13 +95,13 @@ class ContentMask {
 			$this::$label,
 			$this::$label,
 			'edit_posts',
-			$this::$lc_label,
-			[$this, 'admin_overview'],
-			plugins_url( "{$this::$lc_label}/assets/icon-solid.png" )
+			'content-mask',
+			[$this, 'admin_panel'],
+			plugins_url( "content-mask/assets/icon-solid.png" )
 		);
 	}
 
-	public function get_transient_expiration( $transient ){
+	public static function get_transient_expiration( $transient ){
 		$now     = time();
 		$expires = get_option( '_transient_timeout_'.$transient );
 
@@ -106,87 +111,12 @@ class ContentMask {
 		return human_time_diff( $now, $expires );
 	}
 
-	public function admin_overview(){
+	public function admin_panel(){
 		if( !current_user_can( 'edit_posts' ) ){
 			wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
 		} else {
-			$args = [
-				'post_status' => ['publish', 'draft', 'pending', 'private'],
-				'post_type'   => get_post_types( '', 'names' ),
-				'meta_query'  => [[
-					'key'	  	=> 'content_mask_url',
-					'value'   	=> '',
-					'compare' 	=> '!=',
-				]],
-			];
-
-			if( !current_user_can( 'edit_others_posts' ) ) $args['perm'] = 'editable';
-			$query = new WP_Query( $args );
-		?>
-			<div class="wrap">
-				<h2><?= $this::$label; ?></h2>
-				<div class="<?= $this::$lc_label; ?>-admin-table">
-					<div class="<?= $this::$lc_label; ?>-admin-table-header"></div>
-					<div class="<?= $this::$lc_label; ?>-admin-table-body">
-						<table cellspacing="0">
-							<thead>
-								<tr>
-									<th class="method"><div>Method</div></th>
-									<th class="title"><div>Title</div></th>
-									<th class="url"><div>Mask URL</div></th>
-									<th class="cache"><div>Cache Expires</div></th>
-									<th class="post-type"><div>Post Type</div></th>
-								</tr>
-								<tr class="invisible">
-									<th>Method</th>
-									<th>Title</th>
-									<th>Mask URL</th>
-									<th>Cache Expires</th>
-									<th>Post Type</th>
-								</tr>
-							</thead>
-							<tbody>
-								<?php if( $query->have_posts() ){ ?>
-									<?php while( $query->have_posts() ){ ?>
-										<?php
-											$query->the_post();
-											extract( $this->get_post_fields( get_the_ID() ) ); 
-
-											$enabled = filter_var( $content_mask_enable, FILTER_VALIDATE_BOOLEAN ) ? 'enabled' : 'disabled'
-										?>
-										<tr data-attr-id="<?= get_the_ID(); ?>" data-attr-state="<?= $enabled; ?>" class="<?= $enabled; ?>">
-											<td class="method"><div><?php
-												if( $content_mask_method === 'download' ) { echo $this->display_svg( 'download', 'icon', 'title="Download"' ); }
-												else if( $content_mask_method === 'iframe' ) { echo $this->display_svg( 'iframe', 'icon', 'title="Iframe"' ); }
-												else if( $content_mask_method === 'redirect' ) { echo $this->display_svg( 'redirect', 'icon', 'title="Redirect (301)"' ); }
-											?></div></td>
-											<td class="title"><div><span><a target="_blank" href="<?= get_permalink(); ?>"><strong><?= get_the_title(); ?></strong></a><span><span class="row-actions"> - <a href="<?= get_edit_post_link(); ?>">Edit</a> | <a target="_blank" href="<?= get_permalink(); ?>">View</a></div></td>
-											<td class="url"><div><a href="<?= $content_mask_url; ?>" target="_blank"><?= $content_mask_url; ?></a></div></td>
-											<td class="cache"><div><?php
-												if( $content_mask_method === 'iframe' || $content_mask_method === 'redirect' ){
-													echo '<span style="opacity:.4;">N/A</span>';
-												} else {
-													$transient = 'content_mask-'. strtolower( preg_replace( "/[^a-z0-9]/", '', $content_mask_url ) );
-													echo '<span class="transient-expiration">'. $this->get_transient_expiration( $transient ) .'</span>';
-													$data_expiration = $content_mask_transient_expiration ? $this->time_to_seconds( $content_mask_transient_expiration ) : $this->time_to_seconds( '4 hour' );
-													$data_expiration_readable = $content_mask_transient_expiration ? $content_mask_transient_expiration : '4 hours';
-													echo '<span class="row-actions"> - <a href="#" data-expiration-readable="'. $data_expiration_readable .'" data-expiration="'. $data_expiration .'" data-transient="'. $transient .'">Refresh</a></span>';
-												}
-											?></div></td>
-											<td class="post-type"><div data-post-status="<?= get_post_status(); ?>"><?= get_post_type(); ?></div></td>
-										</tr>
-									<?php } ?>
-								<?php } else { ?>
-									<tr>
-										<td><div>No <?= $this::$label; ?>s Found</div></td>
-									</tr>
-								<?php } ?>
-							</tbody>
-						</table>
-					</div>
-				</div>
-			</div>
-		<?php }
+			require_once( dirname(__FILE__).'/admin-panel.php' );	
+		}
 	}
 
 	public function enqueue_admin_assets( $hook ){
@@ -194,25 +124,25 @@ class ContentMask {
 			'edit.php',
 			'post.php',
 			'post-new.php',
-			"toplevel_page_{$this::$lc_label}",
+			"toplevel_page_content-mask",
 		];
 
 		if( in_array( $hook, $hook_array ) ){
 			$assets_dir = plugins_url( '/assets', __FILE__ );
 			
-			wp_enqueue_script( "{$this::$lc_label}-admin", $assets_dir.'/admin.min.js', ['jquery'], filemtime( plugin_dir_path( __FILE__ ) . 'assets/admin.min.js' ), true );
-			wp_enqueue_style( "{$this::$lc_label}-admin", $assets_dir.'/admin.min.css', [], filemtime( plugin_dir_path( __FILE__ ) . 'assets/admin.min.css' ) );
+			wp_enqueue_script( "content-mask-admin", $assets_dir.'/admin.min.js', ['jquery'], filemtime( plugin_dir_path( __FILE__ ) . 'assets/admin.min.js' ), true );
+			wp_enqueue_style( "content-mask-admin", $assets_dir.'/admin.min.css', [], filemtime( plugin_dir_path( __FILE__ ) . 'assets/admin.min.css' ) );
 		}
 	}
 
 	public function global_admin_assets(){
 		echo "<style>
-			#adminmenu #toplevel_page_{$this::$lc_label} img { padding: 0; }
-			#adminmenu #toplevel_page_{$this::$lc_label} .current img { opacity: 1; }
+			#adminmenu #toplevel_page_content-mask img { padding: 0; }
+			#adminmenu #toplevel_page_content-mask .current img { opacity: 1; }
 		</style>";
 	}
 
-	public function display_svg( $icon = '', $class = '', $attr = '' ){
+	public static function display_svg( $icon = '', $class = '', $attr = '' ){
 		if( $icon == 'download' )        return '<svg class="'. $class .' content-mask-svg svg-download" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 17 12 21 16 17"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"></path></svg>';
 		else if( $icon == 'iframe' )     return '<svg class="'. $class .' content-mask-svg svg-iframe" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>';
 		else if( $icon == 'redirect' )   return '<svg class="'. $class .' content-mask-svg svg-redirect" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>';
@@ -277,6 +207,37 @@ class ContentMask {
 		wp_die();
 	}
 
+	public function toggle_content_mask_tracking() {
+		extract( $_POST );
+		$response = [];
+
+		if( $currentState == 'enabled' ){
+			$newState = false;
+		} else if( $currentState == 'disabled' ){
+			$newState = true;
+		} else {
+			$response['status']   = 403;
+			$response['newState'] = ( filter_var( get_option( 'content_mask_tracking' ), FILTER_VALIDATE_BOOLEAN ) ) ? 'enabled' : 'disabled';
+			$response['message']  = 'Unauthorized values detected';
+
+			echo json_encode( $response );
+			wp_die();
+		}
+
+		if( update_option( 'content_mask_tracking', $newState ) ){
+			$response['status']  = 200;
+			$response['newState'] = ( $newState == true ) ? 'enabled' : 'disabled';
+			$response['message']  = $this::$label .' Tracking has been <strong>'. ucwords( $response['newState'] ) .'</strong>.';
+		} else {
+			$response['status']   = 400;
+			$response['newState'] = $currentState;
+			$response['message']  = 'Request failed.';
+		}
+
+		echo json_encode( $response );
+		wp_die();
+	}
+
 	public function validate_url( $url ){
 		$url = filter_var( esc_url( $url ), FILTER_SANITIZE_URL );
 
@@ -294,7 +255,7 @@ class ContentMask {
 		}
 	}
 
-	public function time_to_seconds( $input ){
+	public static function time_to_seconds( $input ){
 		if( $input != 'never' ){;
 			$ex   = explode( ' ', $input );
 			$int  = intval( $ex[0] );
@@ -354,6 +315,7 @@ class ContentMask {
 						width: 100vw;
 					}
 				</style>
+				<title>'. apply_filters( 'wp_title', wp_title( '', false, right ) ) .'</title>
 				<meta name="viewport" content="width=device-width, initial-scale=1">
 			</head>
 			<body>
@@ -362,11 +324,61 @@ class ContentMask {
 		</html>';
 	}
 
+	public function get_client_ip( $hash = true ){
+		if( !empty( $_SERVER['HTTP_CLIENT_IP'] ) ){
+    		$ip = $_SERVER['HTTP_CLIENT_IP'];
+		} else if( !empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ){
+    		$ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+		} else {
+	    	$ip = $_SERVER['REMOTE_ADDR'];
+		}
+
+		if( $hash == true ){
+			$from = '1234567890';
+			$to   = '_|]"^*~-+!';
+
+			// I don't care WHAT the IP is, just that it's "unique" or not.
+			$ip = str_replace( '.', '', $ip ); // remove period to obfuscate
+			$ip = strtr( $ip, $from, $to ); // Translate string to the weird salt above.
+		}
+
+		return $ip;
+	}
+
 	public function show_post( $post_id ){
 		extract( $this->get_post_fields( $post_id ) );
 		$url = esc_url( $content_mask_url );
 
 		$method = sanitize_text_field( $content_mask_method );
+
+		// We're tracking now
+		$this->issetor( $content_mask_tracking, false );
+
+		if( filter_var( get_option( 'content_mask_tracking' ), FILTER_VALIDATE_BOOLEAN ) ){
+			$ip = $this->get_client_ip( true );
+			$views = get_post_meta( $post_id, 'content_mask_views', true );
+
+			if( $views == '' || !$views ){
+				$views = array();
+
+				$views['anon']   = 0;
+				$views['total']  = 0;
+				$views['unique'] = array();
+			}
+
+			 // How many times the page has been viewed, period
+			$views['total'] = (int) $views['total'] + 1;
+			
+			// How many times it's been viewed by non-logged in users
+			if( !is_user_logged_in() )
+				$views['anon'] = (int) $views['anon'] + 1;
+
+			// Add unique (hashed) IPs to array, we'll `count()` these for number.
+			if( !in_array( $ip, $views['unique'] ) )
+				$views['unique'][] = $ip;
+
+			update_post_meta( $post_id, 'content_mask_views', $views );
+		}
 
 			 if( $method === 'download' ) echo $this->get_page_content( $url, $this->time_to_seconds( $content_mask_transient_expiration ) );
 		else if( $method === 'iframe' )   echo $this->get_page_iframe( $url );

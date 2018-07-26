@@ -38,7 +38,7 @@
 	z-index: 10;
 	box-shadow: 0 5px 15px -8px rgba(0,0,0,.5);
 	max-height: 265px;
-    overflow-y: auto;
+	overflow-y: auto;
 }
 
 .cm-url-container {
@@ -77,6 +77,20 @@
 	border: 2px solid #fff;
 }
 
+#content-mask-options .cm_check {
+	margin-right: 12px;
+	transform: scale(1);
+	border: 2px solid #eee;
+}
+
+#content-mask-options .cm_checkbox[data-attr="enabled"] .cm_check {
+	border-color: #fff;
+}
+
+#content-mask-options .cm_option .cm_value {
+	text-transform: capitalize;
+}
+
 .cm_check svg {
 	opacity: 0.2;
 	stroke: #333;
@@ -89,12 +103,14 @@
 	height: 66.66%;
 }
 
-.cm_checkbox input:checked + .cm_check {
+#content_mask_meta_box .cm_checkbox input:checked + .cm_check,
+#content-mask-options .cm_option .cm_checkbox[data-attr="enabled"] input + .cm_check {
 	animation: content_mask_check .5s cubic-bezier(0.895, 0.030, 0.685, 0.220) forwards;
 	background: #00d478;
 }
 
-.cm_checkbox input:checked + .cm_check .icon {
+#content_mask_meta_box .cm_checkbox input:checked + .cm_check .icon,
+#content-mask-options .cm_option .cm_checkbox[data-attr="enabled"] input + .cm_check .icon {
 	opacity: 1;
 	transform: translate3d( -50%, -50%, 0 ) scale(1);
 	stroke: #fff;
@@ -276,16 +292,42 @@
 }
 
 /* Admin Page */
-.content-mask-admin-table {
+.content-mask-admin-panel {
 	margin-top: 10px;
 	border-radius: 3px;
 	background-color: #fff;
 	box-shadow: 0 2px 2px 0 rgba(0,0,0,.14), 0 3px 1px -2px rgba(0,0,0,.2), 0 1px 5px 0 rgba(0,0,0,.12);
 	min-width: 98%;
 	min-width: calc( 100% - 20px );
+	position: relative;
+	box-sizing: border-box;
+}
+
+#content-mask-options {
+	padding: 18px 24px;
+}
+
+#content-mask-options h3,
+#content-mask-options p:last-of-type {
+	margin: 0;
+}
+
+#content-mask-options h3 {
+	margin-bottom: 12px;
+}
+
+#content-mask-options .cm_checkbox {
+	display: inline-block;
+}
+
+#content-mask-list {
 	height: 678px; /* 20 Rows (630 for 20 rows, + 48 for header) */
 	max-height: calc( 100vh - 155px );
-	position: absolute;
+}
+
+#content-mask-list.tracking-disabled .views,
+#content-mask-list.tracking-disabled .th-views {
+	display: none;
 }
 
 .content-mask-admin-table-body {
@@ -301,7 +343,7 @@
 	border-bottom: 1px solid rgba(0, 0, 0, 0.075);
 }
 
-.content-mask-admin-table table {
+.content-mask-admin-panel table {
 	white-space: nowrap;
 	color: rgba(0, 0, 0, 0.87);
 	width:100%;
@@ -310,25 +352,25 @@
 	overflow-y: auto;
 }
 
-.content-mask-admin-table table td,
-.content-mask-admin-table table th {
+.content-mask-admin-panel table td,
+.content-mask-admin-panel table th {
 	line-height: 45px;
 }
 
-.content-mask-admin-table table th {
+.content-mask-admin-panel table th {
 	height: 0;
 	border: none;
 	padding: 0;
 	font-weight: 500;
 }
 
-.content-mask-admin-table table th div {
+.content-mask-admin-panel table th div {
 	font-weight: 600;
 }
 
-.content-mask-admin-table table th div,
-.content-mask-admin-table table thead tr:last-child th,
-.content-mask-admin-table table td {
+.content-mask-admin-panel table th div,
+.content-mask-admin-panel table thead tr:last-child th,
+.content-mask-admin-panel table td {
 	padding: 0 8px 0 24px;
 }
 
@@ -339,11 +381,11 @@
 }
 
 .edit-php .column-content-mask,
-.content-mask-admin-table table td {
+.content-mask-admin-panel table td {
 	position: relative;
 }
 
-.content-mask-admin-table .mine .title div::before {
+.content-mask-admin-panel .mine .title div::before {
 	content: "";
 	width: 2px;
 	background: #2295cc;
@@ -352,57 +394,96 @@
 	height: 100%;
 }
 
-.content-mask-admin-table table .wp-core-ui.button,
-.content-mask-admin-table table .wp-core-ui.button-primary {
+.content-mask-admin-panel table .wp-core-ui.button,
+.content-mask-admin-panel table .wp-core-ui.button-primary {
 	position: absolute;
 	top: 50%;
 	transform: translateY( -50% );
 }
 
-.content-mask-admin-table table thead tr:last-child th {
+.content-mask-admin-panel table thead tr:last-child th {
 	line-height: 0;
 	opacity: 0;
 }
 
-.content-mask-admin-table table thead th div {
+.content-mask-admin-panel table thead th div {
 	position: absolute;
 	line-height: 48px;
 	top: 0;
 }
 
-.content-mask-admin-table table tbody tr:hover {
+.content-mask-admin-panel table tbody tr:hover {
 	background-color: #EDEDF2;
 }
 
-.content-mask-admin-table table td.post-type {
+.content-mask-admin-panel table td.post-type {
 	width: 140px;
 }
 
-.content-mask-admin-table tr.disabled {
+.content-mask-admin-panel tr.disabled {
 	background: #eee;
 	opacity: .5;
 }
 
-.content-mask-admin-table table th.method {
+.content-mask-admin-panel table th.method {
 	width: 10px;
 }
 
-.content-mask-admin-table table td.edit,
-.content-mask-admin-table table td.view {
+.content-mask-admin-panel .cm-hover-help {
+	padding: 0 5px;
+	background: #fff;
+	color: #0095ee;
+	border: 1px dashed;
+	border-radius: 10px;
+	margin-left: 6px;
+	opacity: 1;
+}
+
+.content-mask-admin-panel .cm-hover-help:before {
+	transition: .2s opacity ease-out, .35s transform cubic-bezier(0.67, 0.62, 0.26, 1.54);
+    transform: translate(-50%,-50%) scale(.5);
+	transform-origin: center center;
+	content: attr(data-help);
+	font-size: 0;
+	opacity: 0;
+	position: absolute;
+	width: 200px;
+	display: block;
+	word-wrap: normal;
+	white-space: normal;
+	line-height: 1.62;
+	color: #000;
+	top: 50%;
+	left: 50%;
+	background: #fff;
+	padding: 10px;
+	border-radius: 8px;
+	box-shadow: 0 10px 25px -10px rgba(0,0,0,.75);
+	z-index: 999999;
+}
+
+.content-mask-admin-panel .cm-hover-help:hover:before {
+	font-size: 12px;
+	transform: translate(-50%,-50%) scale(1);
+	opacity: 1;
+}
+
+.content-mask-admin-panel table td.edit,
+.content-mask-admin-panel table td.view {
 	width: 60px;
 }
 
-.content-mask-admin-table table td.post-type div {
+.content-mask-admin-panel table td.post-type div {
 	text-transform: capitalize;
 }
 
-.content-mask-admin-table table td.post-type div:after {
+.content-mask-admin-panel table td.post-type div:after {
 	content: " - " attr(data-post-status);
 	color: #bbb;
 }
 
 .edit-php .column-content-mask .cm-method div:not(:empty),
-.content-mask-admin-table table td.method div {
+.content-mask-admin-panel table td.method div {
 	cursor: pointer;
 	position: absolute;
 	top: 50%;
@@ -415,7 +496,7 @@
 }
 
 .edit-php .column-content-mask .cm-method svg,
-.content-mask-admin-table table td.method svg {
+.content-mask-admin-panel table td.method svg {
 	display: inline-block;
 	width: 20px;
 	height: 20px;
@@ -424,7 +505,7 @@
 }
 
 .edit-php .column-content-mask .cm-method.enabled div,
-.content-mask-admin-table table tr.enabled td.method div {
+.content-mask-admin-panel table tr.enabled td.method div {
 	background: #00d478;
 }
 
@@ -437,36 +518,42 @@
 }
 
 .edit-php .column-content-mask .cm-method.enabled svg,
-.content-mask-admin-table table tr.enabled td.method svg {
+.content-mask-admin-panel table tr.enabled td.method svg {
 	stroke: #fff;
 }
 
 .edit-php .column-content-mask .cm-method div:hover,
-.content-mask-admin-table table td.method div:hover {
+.content-mask-admin-panel table td.method div:hover {
 	cursor: pointer;
 	background: #0095ee !important;
 	opacity: 1;
 }
 
 .edit-php .column-content-mask .cm-method div:hover svg,
-.content-mask-admin-table table td.method div:hover svg {
+.content-mask-admin-panel table td.method div:hover svg {
 	stroke: #fff;
 }
 
-
 .edit-php .column-content-mask .cm-method div.cm-reloading,
-.content-mask-admin-table table tr td.method div.cm-reloading {
+.content-mask-admin-panel table tr td.method div.cm-reloading {
 	animation: 1s content_mask_reload linear infinite;
 	background-color: #0095ee !important;
 }
 
+#content-mask-options .cm_option.cm-reloading .cm_checkbox input + .cm_check {
+	animation: 1s option_reload linear infinite;
+	background-color: #0095ee !important;
+}
+
 .edit-php .column-content-mask .cm-method div.cm-reloading svg,
-.content-mask-admin-table table tr td.method div.cm-reloading svg {
+.content-mask-admin-panel table tr td.method div.cm-reloading svg,
+#content-mask-options .cm_option.cm-reloading .cm_checkbox input + .cm_check svg {
 	display: none;
 }
 
 .edit-php .column-content-mask .cm-method div.cm-reloading:after,
-.content-mask-admin-table table tr td.method div.cm-reloading:after {
+.content-mask-admin-panel table tr td.method div.cm-reloading:after,
+#content-mask-options .cm_option.cm-reloading .cm_checkbox input + .cm_check:after {
 	content: "";
 	display: block;
 	width: 8px;
@@ -557,6 +644,15 @@
 	}
 	to {
 		transform: translateY(-50%) rotate(360deg);
+	}
+}
+
+@keyframes option_reload {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
 	}
 }
 

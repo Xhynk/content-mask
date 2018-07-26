@@ -2,10 +2,10 @@
 Contributors: alexdemchak
 Donate Link: http://ko-fi.com/reverendxhynk/
 Tags: Embed, Domain Mask, Mask, Redirect, URL Mask
-Requires at Least: 3.6
-Tested Up To: 4.9.6
-Stable tag: 1.4.3.1
-Requires PHP: 5.4
+Requires at Least: 4.1
+Tested Up To: 4.9.7
+Stable tag: 1.4.4
+Requires PHP: 5.6
 Author URI: https://xhynk.com/
 Plugin URL: https://xhynk.com/content-mask/
 License: GPLv2 or later
@@ -44,6 +44,10 @@ Notes:
 3. Notice that the URL has remained unchanged, but when Content Mask is enabled, it fully and seamlessly replaces all of the content on that permalink with the content from the Content Mask URL.
 
 == Changelog ==
+= 1.4.4 =
+* Added an optional page tracking feature that tracks the number of visitors to each Content Masked page.
+* Fixed a bug where the <title> tag wasn't showing up when using the iframe method.
+
 = 1.4.3.1 =
 * Removed the Cache Refresh option in the Content Mask Admin page for Masks set to Iframe and Redirect (since those methods aren't cacheable)
 * Reverted the change made in 1.4.2 and moved the Page Processing function back to the template Redirect Hook. It was causing issues with homepage redirection.

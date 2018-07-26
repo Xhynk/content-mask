@@ -8,17 +8,17 @@ jQuery(document).ready(function($){
 	});
 
 	function contentMaskMessage( classes, message ){
-		$('.content-mask-admin-table').before('<div class="cm-message notice notice-'+ classes +'"><p>'+ message +'</p></div>');
+		$('.toplevel_page_content-mask #wpbody .wrap > h2').after('<div class="cm-message notice notice-'+ classes +'"><p>'+ message +'</p></div>');
 	}
 
-	$('.content-mask-admin-table-body td.cache').on( 'click', 'a', function(){
+	$('#content-mask-list td.cache-expires').on( 'click', 'a', function(){
 		$('.cm-message').remove();
 
 		var	$clicked   = $(this),
-			maskURL    = $clicked.closest('tr').find('td.view a').attr('href'),
+			maskURL    = $clicked.closest('tr').find('td.mask-url a').attr('href'),
 			transient  = $clicked.attr('data-transient'),
 			postID     = $clicked.closest('tr').attr('data-attr-id'),
-			cacheFor   = $clicked.closest('tr').find('td.url a').text();
+			cacheFor   = $clicked.closest('tr').find('td.mask-url a').text();
 			expiration = $clicked.attr('data-expiration'),
 			$methodDiv = $clicked.closest('tr').find('td.method div'),
 			expirationReadable = $clicked.attr('data-expiration-readable');
@@ -38,8 +38,8 @@ jQuery(document).ready(function($){
 			var classes;
 
 			if( response.status == 200 ){
-				$('.content-mask-admin-table-body tr td.cache').each(function(){
-					if( $(this).closest('tr').find('td.url a').text() == cacheFor ){
+				$('.content-mask-admin-table-body tr td.cache-expires').each(function(){
+					if( $(this).closest('tr').find('td.mask-url a').text() == cacheFor ){
 						$(this).find('.transient-expiration').text( expirationReadable );
 					}
 				});
@@ -55,7 +55,7 @@ jQuery(document).ready(function($){
 		return false;
 	});
 
-	$('.content-mask-admin-table-body, .column-content-mask').on( 'click', '.method svg, .cm-method svg', function(){
+	$('#content-mask-list .content-mask-admin-table-body, #content-mask-list .column-content-mask').on( 'click', '.method svg, .cm-method svg', function(){
 		var	$clicked     = $(this),
 			restoreIcon  = $clicked.attr('class');
 
@@ -92,6 +92,36 @@ jQuery(document).ready(function($){
 			}
 
 			$clicked.closest('div').removeClass('cm-reloading')
+
+			contentMaskMessage( classes, response.message );
+		}, 'json');
+	});
+
+	$('#content-mask-options .cm_checkbox').on( 'click', '.cm_check', function(){
+		var	$clicked     = $(this).closest('.cm_checkbox'),
+			currentState = $clicked.attr('data-attr');
+
+		var data = {
+			'action': 'toggle_content_mask_tracking',
+			'currentState': currentState,
+		};
+
+		$clicked.closest('.cm_option').addClass('cm-reloading');
+		$.post(ajaxurl, data, function(response) {
+			$('.cm-message').remove(); // Prevent weird interaction with existing messages
+			
+			if( response.status == 200 ){
+				classes = 'info';
+			} else if( response.status == 400 || response.status == 403 ){
+				classes = 'error';
+			}
+			
+			$('#content-mask-list').removeClass('tracking-enabled tracking-disabled');
+			$('#content-mask-list').addClass('tracking-' + response.newState);
+
+			$clicked.closest('.cm_option').removeClass('cm-reloading');
+			$clicked.closest('.cm_option').find('.cm_value').text( response.newState );
+			$clicked.attr('data-attr', response.newState );
 
 			contentMaskMessage( classes, response.message );
 		}, 'json');
