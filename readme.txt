@@ -4,7 +4,7 @@ Donate Link: http://ko-fi.com/reverendxhynk/
 Tags: Embed, Domain Mask, Mask, Redirect, URL Mask
 Requires at Least: 4.1
 Tested Up To: 4.9.7
-Stable tag: 1.4.4
+Stable tag: 1.4.4.1
 Requires PHP: 5.6
 Author URI: https://xhynk.com/
 Plugin URL: https://xhynk.com/content-mask/
