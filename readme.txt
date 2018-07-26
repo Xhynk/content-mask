@@ -44,6 +44,9 @@ Notes:
 3. Notice that the URL has remained unchanged, but when Content Mask is enabled, it fully and seamlessly replaces all of the content on that permalink with the content from the Content Mask URL.
 
 == Changelog ==
+= 1.4.4.1 =
+* Included the Site Title in the title tag when using the iframe method.
+
 = 1.4.4 =
 * Added an optional page tracking feature that tracks the number of visitors to each Content Masked page.
 * Fixed a bug where the <title> tag wasn't showing up when using the iframe method.
