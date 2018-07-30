@@ -47,6 +47,14 @@ In the Content Mask admin panel, you can enable tracking for Content Masked page
 - [Non-User] shows how many times it's been viewed by visitors that are _not_ logged in to the website.
 - [Unique] shows how many times it's been viewed by unique IP addresses. Note: IP addresses are one-way hashed and are not identifiable in any way.
 
+= Creating a Content Masked Page =
+
+https://www.youtube.com/watch?v=_H7IWFwmVfo?rel=0
+
+= Using the Content Mask Admin Panel =
+
+https://www.youtube.com/watch?v=5hEBMKSLHxI?rel=0
+
 = Notes: =
 
  - Please confirm you're allowed to utilize and embed the content before embedding any particular URL, don't Content Mask any content you don't have license to share or use.
@@ -57,7 +65,6 @@ In the Content Mask admin panel, you can enable tracking for Content Masked page
 
 [Read More About Content Mask](https://xhynk.com/content-mask/)
 
-https://www.youtube.com/watch?v=smfBs5EDJ8Y?rel=0
 
 == Frequently Asked Questions ==
 
@@ -87,9 +94,10 @@ If your website is secured (with http://), make sure any links on the iframed pa
 
 == Screenshots ==
 
-1. Enable the Content Mask with the ? - Put in the URL of the content you would like to embed. Done! Optionally, choose a different method (Download, Iframe, or Redirect). If using the download method, you may also change the cache duration from never up to 4 weeks (you may refresh the cache at any point manually).
-2. The Content Mask Admin Panel shows a list of all Content Mask pages/posts and their current settings. Quickly enable or disable the Content Mask with a single click on the Method icon. The cache may also be refreshed from this page. Only pages/posts that the current user can edit are displayed.
-3. Notice that the URL has remained unchanged, but when Content Mask is enabled, it fully and seamlessly replaces all of the content on that permalink with the content from the Content Mask URL.
+1. Enable the Content Mask with the Checkmark - Put in the URL of the content you would like to embed. Done! Optionally, choose a different method (Download, Iframe, or Redirect). If using the download method, you may also change the cache duration from never up to 4 weeks (you may refresh the cache at any point manually).
+2. The Content Mask Admin Panel shows a list of all Content Mask pages/posts and their current settings. Quickly enable or disable the Content Mask with a single click on the Method icon. The cache may also be refreshed from this page. You may also enabled/disabled Vistor Tracking that shows how many times each Content Masked page has been viewed. Only pages/posts that the current user can edit are displayed.
+3. The regular WordPress page content, without Content Mask on.
+4. The same WordPress page with Content Mask enabled and set to https://example.com/. You can see the URL has remained the same but the content has been entirely replaced (on the front end only) by the content from https://example.com/
 
 == Changelog ==
 = 1.4.4.1 =
