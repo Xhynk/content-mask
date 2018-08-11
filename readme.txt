@@ -1,7 +1,7 @@
 === Content Mask ===
 Contributors: alexdemchak
 Donate Link: https://www.paypal.me/xhynk/
-Tags: Embed, Domain Mask, Mask, Redirect, URL Mask
+Tags: Embed, Domain Mask, Mask, Redirect, Link
 Requires at Least: 4.1
 Tested Up To: 4.9.8
 Stable tag: 1.5
@@ -15,17 +15,17 @@ Embed any external content on a Page, Post, or Custom Post Type without the need
 
 == Description ==
 
-![Content Mask Logo](https://ps.w.org/content-mask/assets/icon-256x256.png)
-
 [Read More & View Demos Here](https://xhynk.com/content-mask/)
 
 = Embed Any Content Into Your WordPress Website =
 
-Content Mask allows you to embed any external content onto your own WordPress Pages, Posts, and Custom Post types. The end result is similar to setting up a [domain mask](http://www.networksolutions.com/support/what-is-web-forwarding-and-masking/), but the content is embedded into the front end of your website and is fully contained inside your WordPress permalink ecosystem.
+Content Mask allows you to embed any external content onto your own WordPress Pages, Posts, and Custom Post Types. The end result is fairly similar to setting up a [Domain Mask](http://www.networksolutions.com/support/what-is-web-forwarding-and-masking/), but the content is embedded into the front end of your website and is fully contained inside your WordPress permalink ecosystem.
+
+> *Example*: If you built a landing page on `landing-page-builder.com/your-landing-page/`, you can simply create a new Page on your website at `your-site.com/landing-page/` and paste in the URL of your landing page. The Content Mask plugin will then download and cache of copy of your landing page directly on your website, so any visitors that come to `your-site.com/landing-page/` will see the landing page you built. This allows you to keep all of your links integrated into your WordPress Website.
 
 = Simple 2-Step UI =
 
-With a simple 2-Step UI, you can embed any external content into your website, no forwarding, DNS records, or .htaccess rules to mess with.
+With a simple 2-Step UI, you can embed any external content into your website without any complicated URL Forwarding, DNS Records, or `.htaccess` rules to mess with.
 
 1. Just enable the Content Mask on any Page, Post, or Custom Post type by clicking on the check mark.
 
@@ -37,7 +37,7 @@ It's that simple!
 
 - Using the Download method (default) will fetch the content from the Content Mask URL, cache it on your website, and replace the current page request with that content. By default, this cache lasts 4 hours - but it can be changed anywhere from "Never Cache" all the way up to "Cache for 4 Weeks". Caching prevents the need for additional requests that slow down your site.
 
-- Using the Iframe method will replace the current page request with a full width/height, frameless iframe containing the host URL. This method is ideal if you rely on whitelisted IP/domain names for certain functionality including serving scripts, styles, and images.
+- Using the Iframe method will replace the current page request with a full width/height, frameless iframe containing the host URL. This method is ideal if the URL you want to embed won't serve scripts, styles, or images to other URLs or IP Addresses. If you use the Download Method, and links or images look broken, you can try the Iframe method instead.
 
 - Using the Redirect (301) method will simply redirect the visitor to the host URL.
 
@@ -72,7 +72,7 @@ https://www.youtube.com/watch?v=5hEBMKSLHxI?rel=0
 
 = Can You Show the Header/Footer on Content Masked Pages? =
 
-*No*. This is because of how we process page requests, it's not actually possible to do this. Using Content Mask will override the _entire_ page content.
+*No*. This is because of how page requests are processed. Using Content Mask will override the _entire_ page content on the front end.
 
 = Can I Embed Multiple URLs on One Page? =
 
@@ -80,11 +80,11 @@ https://www.youtube.com/watch?v=5hEBMKSLHxI?rel=0
 
 = Will Content Mask Overwrite My Page Content? =
 
-*No*. Content Mask doesn't permanently alter anything on your website, and the embedded content is only shown on the front-end. When you turn off Content Mask, any page content you had in the editor will still be there.
+*No*. Content Mask does *not* permanently alter anything on your website. The embedded content is only shown on the front-end. When you turn off Content Mask, any page content you had in the editor will still be there.
 
 = Something Isn't Loading With the Download Method =
 
-Some websites "whitelist" IP addresses for scripts, images, and files to be accessed from. If that's the case, try using the iframe method instead.
+Some websites "whitelist" IP addresses or domains for scripts, images, and files to be accessed from. If that's the case, try using the iframe method instead.
 
 = Something Isn't Loading with the Iframe Method =
 
@@ -92,7 +92,7 @@ Some websites don't allow themselves to be iframed at all. Please reach out to t
 
 = Links Aren't Working with the Iframe Method =
 
-If your website is secured (with http://), make sure any links on the iframed page are secure as well, as most modern browsers don't allow insecure content (http://) to be loaded into a secure page.
+If your website is secured (with https://), make sure any links on the iframed page are secure as well, as most modern browsers don't allow insecure content (http://) to be loaded into a secure page or iframe.
 
 == Screenshots ==
 
