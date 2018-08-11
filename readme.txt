@@ -72,7 +72,7 @@ https://www.youtube.com/watch?v=5hEBMKSLHxI?rel=0
 
 1. Upload the `content-mask` folder to your `/wp-content/plugins/` directory.
 
-2. Activate the "Content Mask Plugin" plugin.
+2. Activate the "Content Mask" plugin.
 
 **How to Use:**
 
