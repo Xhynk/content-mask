@@ -19,7 +19,7 @@ Embed any external content on a Page, Post, or Custom Post Type without the need
 
 [Read More & View Demos Here](https://xhynk.com/content-mask/)
 
-= Embed Any Content In Your WordPress Website =
+= Embed Any Content Into Your WordPress Website =
 
 Content Mask allows you to embed any external content onto your own WordPress Pages, Posts, and Custom Post types. The end result is similar to setting up a [domain mask](http://www.networksolutions.com/support/what-is-web-forwarding-and-masking/), but the content is embedded into the front end of your website and is fully contained inside your WordPress permalink ecosystem.
 
