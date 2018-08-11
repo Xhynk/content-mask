@@ -1,10 +1,10 @@
 === Content Mask ===
 Contributors: alexdemchak
-Donate Link: http://ko-fi.com/reverendxhynk/
+Donate Link: https://www.paypal.me/xhynk/
 Tags: Embed, Domain Mask, Mask, Redirect, URL Mask
 Requires at Least: 4.1
-Tested Up To: 4.9.7
-Stable tag: 1.4.4.1
+Tested Up To: 4.9.8
+Stable tag: 1.5
 Requires PHP: 5.6
 Author URI: https://xhynk.com/
 Plugin URL: https://xhynk.com/content-mask/
@@ -100,6 +100,15 @@ If your website is secured (with http://), make sure any links on the iframed pa
 4. The same WordPress page with Content Mask enabled and set to https://example.com/. You can see the URL has remained the same but the content has been entirely replaced (on the front end only) by the content from https://example.com/
 
 == Changelog ==
+= 1.5 =
+* Started SCSS Conversion for admin.css file, broken into partials (still needs optimization)
+* Modified Content Mask Admin Panel to load only 20 Content Masks, and subsequently load 20 more when scrolled to the bottom.
+* Included Admin Help links above Content Mask Admin Panel
+* Introduced an Admin Notice when a page is being overwritten with a Content Mask
+* Introduced a "hacky" Admin Notice when a Gutenberg page is being overwritten with a Content Mask since Admin Notices are just hidden.
+* Modified plugin structure with an includes file.
+* Went back and better commented functions in core files to more closely follow best practices in documentation.
+
 = 1.4.4.1 =
 * Included the Site Title in the title tag when using the iframe method.
 

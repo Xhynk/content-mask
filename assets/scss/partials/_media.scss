@@ -1,0 +1,59 @@
+@media (max-width: 1200px){
+	.content-mask-url-container {
+		float: none;
+		width: 100%;
+		clear: both;
+		padding-top: 24px;
+	}
+
+	.content-mask-method-container {
+		left: 115px;
+		right: auto;
+		width: calc( 100% - 151px );
+	}
+
+	.content-mask-method-container .content-mask-select {
+		width: 100%;
+	}
+
+	.content-mask-expiration-div {
+		text-align: left;
+	}
+
+	.content-mask-expiration-header {
+		right: auto;
+		left: 0;
+	}
+
+	.content-mask-expiration-container {
+		display: inline-block;
+		width: calc( 100% - 255px );
+	}
+
+	.content-mask-expiration-container .content-mask-select {
+		width: 100%;
+	}
+}
+
+@media (max-width: 520px){
+	.content-mask-expiration-div {
+		text-align: left;
+	}
+
+	.content-mask-method-container,
+	.content-mask-expiration-container {
+		position: relative;
+		left: 0;
+		width: 100%;
+	}
+
+	.content-mask-select {
+		width: 100%;
+	}
+	
+	.content-mask-enable-container {
+		float: none;
+		margin-bottom: 24px;
+		margin: 0 auto 24px;
+	}
+}

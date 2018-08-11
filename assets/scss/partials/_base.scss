@@ -1,0 +1,39 @@
+.hide-overflow {
+	overflow: hidden !important;
+}
+
+.wp-core-ui .svg-icon-button {
+	position: relative;
+	padding-left: 28px;
+}
+
+.wp-core-ui .svg-icon-button-left {
+	padding-left: 28px;
+}
+
+.wp-core-ui .svg-icon-button-right {
+	padding-right: 28px;
+}
+
+.wp-core-ui .svg-icon-button svg {
+	width: 14px;
+	position: absolute;
+	top: 50%;
+	@include vendor-prefix( transform, translateY(-50%) );
+	left: 8px;
+	stroke: #0095ee;
+}
+
+
+.wp-core-ui .svg-icon-button svg.svg-fill {
+	fill: #0095ee;
+	stroke: #0062bb;
+}
+
+.wp-core-ui .svg-icon-button-left svg {
+	left: 8px;
+}
+
+.wp-core-ui .svg-icon-button-right svg {
+	right: 8px;
+}

@@ -1,0 +1,57 @@
+.content-mask-checkbox > input {
+	display: none !important;
+}
+
+.content-mask-check {
+	transform: scale(1.2);
+	display: inline-block;
+	border-radius: 50%;
+	background: #fff;
+	vertical-align: middle;
+	cursor: pointer;
+	transition: border .3s ease;
+	width: 52px;
+	height: 52px;
+	position: relative;
+	border: 2px solid #fff;
+}
+
+#content-mask-options .content-mask-check {
+	margin-right: 12px;
+	transform: scale(1);
+	border: 2px solid #eee;
+}
+
+#content-mask-options .content-mask-checkbox[data-attr="enabled"] .content-mask-check {
+	border-color: #fff;
+}
+
+#content-mask-options .content-mask-option .content-mask-value {
+	text-transform: capitalize;
+}
+
+.content-mask-check svg {
+	opacity: 0.2;
+	stroke: #333;
+	transition: opacity .3s .1s ease;
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	transform: translate3d( -50%, -50%, 0 );
+	width: 66.66%;
+	height: 66.66%;
+}
+
+#content-mask-settings .content-mask-checkbox input:checked + .content-mask-check,
+#content-mask-options .content-mask-option .content-mask-checkbox[data-attr="enabled"] input + .content-mask-check {
+	animation: content_mask_check .5s cubic-bezier(0.895, 0.030, 0.685, 0.220) forwards;
+	background: #00d478;
+}
+
+#content-mask-settings .content-mask-checkbox input:checked + .content-mask-check .icon,
+#content-mask-options .content-mask-option .content-mask-checkbox[data-attr="enabled"] input + .content-mask-check .icon {
+	opacity: 1;
+	transform: translate3d( -50%, -50%, 0 ) scale(1);
+	stroke: #fff;
+	animation: content_mask_icon .3s cubic-bezier(1.000, 0.008, 0.565, 1.650) .1s 1 forwards;
+}

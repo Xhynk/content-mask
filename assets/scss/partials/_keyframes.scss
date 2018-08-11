@@ -1,0 +1,48 @@
+@keyframes content_mask_reload {
+	0% {
+		@include vendor-prefix( transform, translateY(-50%) rotate(0deg) )
+	}
+
+	100% {
+		@include vendor-prefix( transform, translateY(-50%) rotate(360deg) );
+	}
+}
+
+@keyframes option_reload {
+	0% {
+		@include vendor-prefix( transform, rotate(0deg) );
+	}
+
+	100% {
+		@include vendor-prefix( transform, rotate(360deg) );
+	}
+}
+
+@keyframes content_mask_icon {
+	0% {
+		@include vendor-prefix( opacity, 0 );
+		@include vendor-prefix( transform, translate3d( -50%, -50%, 0 ) scale(0.3) );
+	}
+
+	100% {
+		@include vendor-prefix( opacity, 1 );
+		@include vendor-prefix( transform, translate3d( -50%, -50%, 0 ) scale(1) );
+	}
+}
+
+@keyframes content_mask_check {
+	100% {
+		width: 52px;
+		height: 52px;
+		border: 2px solid #FFF;
+		background: #00d478;
+	}
+}
+
+@keyframes content_mask_loading {
+  0%, 80%, 100% { 
+    @include vendor-prefix( transform, scale(0) );
+  } 40% { 
+    @include vendor-prefix( transform, scale(1.0) );
+  }
+}

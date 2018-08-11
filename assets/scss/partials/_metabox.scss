@@ -1,0 +1,55 @@
+#content-mask-settings {
+	letter-spacing: 1.35px;
+	background: #085078;
+	background: linear-gradient(45deg, #287098, #085078);
+	width: calc( 100% - 48px );
+	margin: -6px -12px -12px;
+	padding: 36px 36px 12px;
+}
+
+.content-mask-enable-container {
+	width: 56px;
+	margin-right: 24px;
+	float: left;
+}
+
+.content-mask-method-container {
+	width: 210px;
+	position: absolute;
+	right: 36px;
+	box-shadow: 0 5px 15px -8px rgba(0,0,0,.5);
+	z-index: 10;
+}
+
+.content-mask-expiration-div {
+	text-align: right;
+	position: relative;
+	z-index: 9;
+}
+
+.content-mask-expiration-container {
+	position: absolute;
+	text-align: left;
+	right: 0;
+	z-index: 10;
+	box-shadow: 0 5px 15px -8px rgba(0,0,0,.5);
+	max-height: 265px;
+	overflow-y: auto;
+}
+
+.content-mask-url-container {
+	width: calc( 100% - 310px );
+	float: left;
+}
+
+.content-mask-expiration-header {
+	color: #fff;
+	display: inline-block;
+	vertical-align: top;
+	position: relative;
+	right: 215px;
+}
+
+.content-mask-expiration-container {
+	display: inline-block;
+}

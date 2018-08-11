@@ -1,0 +1,23 @@
+.content-mask-spinner {
+	margin: 10px auto 0;
+	width: 70px;
+	text-align: center;
+	height: 35px;
+}
+
+.content-mask-spinner > div {
+	width: 18px;
+	height: 18px;
+	background-color: #333;
+	border-radius: 100%;
+	display: inline-block;
+	animation: content_mask_loading 1.4s infinite ease-in-out both;
+}
+
+.content-mask-spinner .bounce1 {
+	animation-delay: -0.32s;
+}
+
+.content-mask-spinner .bounce2 {
+	animation-delay: -0.16s;
+}

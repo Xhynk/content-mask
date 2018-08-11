@@ -1,0 +1,290 @@
+.content-mask-admin-panel {
+	margin-top: 10px;
+	border-radius: 3px;
+	background-color: #fff;
+	box-shadow: 0 2px 2px 0 rgba(0,0,0,.14), 0 3px 1px -2px rgba(0,0,0,.2), 0 1px 5px 0 rgba(0,0,0,.12);
+	min-width: 98%;
+	min-width: calc( 100% - 20px );
+	position: relative;
+	box-sizing: border-box;
+}
+
+#content-mask-options {
+	padding: 18px 24px;
+	clear: both;
+}
+
+#content-mask-options h3,
+#content-mask-options p:last-of-type {
+	margin: 0;
+}
+
+#content-mask-options h3 {
+	margin-bottom: 12px;
+}
+
+#content-mask-options .content-mask-checkbox {
+	display: inline-block;
+}
+
+#content-mask-list {
+	height: 678px; /* 20 Rows (630 for 20 rows, + 48 for header) */
+	max-height: calc( 100vh - 155px );
+}
+
+#content-mask-list.tracking-disabled .views,
+#content-mask-list.tracking-disabled .th-views {
+	display: none;
+}
+
+.content-mask-table-body {
+	overflow-x: hidden;
+	overflow-y: auto;
+	height: calc(100% - 48px);
+}
+
+.content-mask-table-header {
+	content: '';
+	top: 0;
+	height: 48px;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.075);
+}
+
+.content-mask-admin-panel table {
+	white-space: nowrap;
+	color: rgba(0, 0, 0, 0.87);
+	width:100%;
+	font-size: 12px;
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
+.content-mask-admin-panel table td,
+.content-mask-admin-panel table th {
+	line-height: 45px;
+}
+
+.content-mask-admin-panel table th {
+	height: 0;
+	border: none;
+	padding: 0;
+	font-weight: 500;
+}
+
+.content-mask-admin-panel table th div {
+	font-weight: 600;
+}
+
+.content-mask-admin-panel table th div,
+.content-mask-admin-panel table thead tr:last-child th,
+.content-mask-admin-panel table td {
+	padding: 0 8px 0 24px;
+}
+
+.edit-php .column-content-mask {
+	/* width: 90p; */	/* For "Content Mask" Label */
+	width: 40px;		/* For "Mask" Label */
+	text-align: center;
+}
+
+.edit-php .column-content-mask,
+.content-mask-admin-panel table td {
+	position: relative;
+}
+
+.content-mask-admin-panel .mine .title div::before {
+	content: "";
+	width: 2px;
+	background: #2295cc;
+	position: absolute;
+	left: 0px;
+	height: 100%;
+}
+
+.content-mask-admin-panel table .wp-core-ui.button,
+.content-mask-admin-panel table .wp-core-ui.button-primary {
+	position: absolute;
+	top: 50%;
+	transform: translateY( -50% );
+}
+
+.content-mask-admin-panel table thead tr:last-child th {
+	line-height: 0;
+	opacity: 0;
+}
+
+.content-mask-admin-panel table thead th div {
+	position: absolute;
+	line-height: 48px;
+	top: 0;
+}
+
+.content-mask-admin-panel table tbody tr:hover {
+	background-color: #EDEDF2;
+}
+
+.content-mask-admin-panel table td.post-type {
+	width: 140px;
+}
+
+.content-mask-admin-panel tr.disabled {
+	background: #eee;
+	opacity: .5;
+}
+
+.content-mask-admin-panel table th.method {
+	width: 10px;
+}
+
+.content-mask-admin-panel .content-mask-hover-help {
+	padding: 0 5px;
+	background: #fff;
+	color: #0095ee;
+	border: 1px dashed;
+	border-radius: 10px;
+	margin-left: 6px;
+	opacity: 1;
+}
+
+.content-mask-admin-panel .content-mask-hover-help:before {
+	transition: .2s opacity ease-out, .35s transform cubic-bezier(0.67, 0.62, 0.26, 1.54);
+    transform: translate(-50%,-50%) scale(.5);
+	transform-origin: center center;
+	content: attr(data-help);
+	font-size: 0;
+	opacity: 0;
+	position: absolute;
+	width: 200px;
+	display: block;
+	word-wrap: normal;
+	white-space: normal;
+	line-height: 1.62;
+	color: #000;
+	top: 50%;
+	left: 50%;
+	background: #fff;
+	padding: 10px;
+	border-radius: 8px;
+	box-shadow: 0 10px 25px -10px rgba(0,0,0,.75);
+	z-index: 999999;
+}
+
+.content-mask-admin-panel .content-mask-hover-help:hover:before {
+	font-size: 12px;
+	transform: translate(-50%,-50%) scale(1);
+	opacity: 1;
+}
+
+.content-mask-admin-panel table td.edit,
+.content-mask-admin-panel table td.view {
+	width: 60px;
+}
+
+.content-mask-admin-panel table td.post-type div {
+	text-transform: capitalize;
+}
+
+.content-mask-admin-panel table td.post-type div:after {
+	content: " - " attr(data-post-status);
+	color: #bbb;
+}
+
+.edit-php .column-content-mask .content-mask-method div:not(:empty),
+.content-mask-admin-panel table td.method div {
+	cursor: pointer;
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 40px;
+	height: 40px;
+	background: #fff;
+	border-radius: 20px;
+	overflow: hidden;
+}
+
+.edit-php .column-content-mask .content-mask-method svg,
+.content-mask-admin-panel table td.method svg {
+	display: inline-block;
+	width: 20px;
+	height: 20px;
+	padding: 10px;
+	stroke: #000;
+}
+
+.edit-php .column-content-mask .content-mask-method.enabled div,
+.content-mask-admin-panel table tr.enabled td.method div {
+	background: #00d478;
+}
+
+.edit-php .column-content-mask .content-mask-method.enabled div:not(:empty) {
+	box-shadow: 0 0 0 1px #00d478;
+}
+
+.edit-php .column-content-mask .content-mask-method.disabled div:not(:empty) {
+	box-shadow: 0 0 0 1px rgba(0,0,0,.175);
+}
+
+.edit-php .column-content-mask .content-mask-method.enabled svg,
+.content-mask-admin-panel table tr.enabled td.method svg {
+	stroke: #fff;
+}
+
+.edit-php .column-content-mask .content-mask-method div:hover,
+.content-mask-admin-panel table td.method div:hover {
+	cursor: pointer;
+	background: #0095ee !important;
+	opacity: 1;
+}
+
+.edit-php .column-content-mask .content-mask-method div:hover svg,
+.content-mask-admin-panel table td.method div:hover svg {
+	stroke: #fff;
+}
+
+.edit-php .column-content-mask .content-mask-method div.content-mask-reloading,
+.content-mask-admin-panel table tr td.method div.content-mask-reloading {
+	animation: 1s content_mask_reload linear infinite;
+	background-color: #0095ee !important;
+}
+
+#content-mask-options .content-mask-option.content-mask-reloading .content-mask-checkbox input + .content-mask-check {
+	animation: 1s option_reload linear infinite;
+	background-color: #0095ee !important;
+}
+
+.edit-php .column-content-mask .content-mask-method div.content-mask-reloading svg,
+.content-mask-admin-panel table tr td.method div.content-mask-reloading svg,
+#content-mask-options .content-mask-option.content-mask-reloading .content-mask-checkbox input + .content-mask-check svg {
+	display: none;
+}
+
+.edit-php .column-content-mask .content-mask-method div.content-mask-reloading:after,
+.content-mask-admin-panel table tr td.method div.content-mask-reloading:after,
+#content-mask-options .content-mask-option.content-mask-reloading .content-mask-checkbox input + .content-mask-check:after {
+	content: "";
+	display: block;
+	width: 8px;
+	height: 8px;
+	border-radius: 10px;
+	position: absolute;
+	top: 50%;
+	left: 25%;
+	transform: translate(-50%,-50%);
+	background: #fff;
+}
+
+.wp-core-ui.toplevel_page_content-mask #wpbody-content > .wrap {
+	position: relative;
+}
+
+.wp-core-ui.toplevel_page_content-mask .notice.content-mask-message {
+	position: absolute;
+	z-index: 10;
+	top: 0;
+	left: 160px;
+	padding-right: 16px;
+}
+
+.toplevel_page_content-mask h2 .svg-icon-button {
+	margin-left: 8px;
+}

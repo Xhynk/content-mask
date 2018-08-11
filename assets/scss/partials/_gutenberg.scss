@@ -1,0 +1,8 @@
+.gutenberg-editor-page.content-mask-enabled-page .gutenberg:not(.content-mask-unchecked) .edit-post-visual-editor,
+.gutenberg-editor-page.content-mask-enabled-page .gutenberg:not(.content-mask-unchecked) .edit-post-text-editor {
+	display: none;
+}
+
+.gutenberg-editor-page.content-mask-enabled-page .gutenberg .edit-post-meta-boxes-area {
+	margin-top: 55px;
+}
