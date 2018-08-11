@@ -15,6 +15,8 @@ Embed any external content on a Page, Post, or Custom Post Type without the need
 
 == Description ==
 
+![Content Mask Logo](https://ps.w.org/content-mask/assets/icon-256x256.png)
+
 [Read More & View Demos Here](https://xhynk.com/content-mask/)
 
 = Embed Any Content In Your WordPress Website =
