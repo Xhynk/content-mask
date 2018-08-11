@@ -68,6 +68,29 @@ https://www.youtube.com/watch?v=5hEBMKSLHxI?rel=0
 [Read More About Content Mask](https://xhynk.com/content-mask/)
 
 
+== Installation ==
+
+1. Upload the `content-mask` folder to your `/wp-content/plugins/` directory.
+
+2. Activate the "Content Mask Plugin" plugin.
+
+**How to Use:**
+
+1. Edit (or Add) a Page, Post, or Custom Post Type.
+
+2. Underneath the page editor, find the "Content Mask Settings" metabox.
+
+3. Click the Checkmark on the left to enable Content Mask.
+
+4. Paste a URL in the Content Mask URL field.
+
+5. Choose a method: Download, Iframe, or Redirect (301).
+
+6. Update (or Publish) the Page, Post or Custom Post Type.
+
+7. That's all! When a user visits that Page, Post or Custom Post Type, they will instead see the content from the URL you have put in the Content Mask URL field.
+
+
 == Frequently Asked Questions ==
 
 = Can You Show the Header/Footer on Content Masked Pages? =
