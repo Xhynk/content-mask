@@ -99,11 +99,15 @@ jQuery(document).ready(function($){
 
 	$('#content-mask-options .content-mask-checkbox').on( 'click', '.content-mask-check', function(){
 		var	$clicked     = $(this).closest('.content-mask-checkbox'),
-			currentState = $clicked.attr('data-attr');
+			currentState = $clicked.attr('data-attr'),
+			optionName   = $clicked.find('input[type="checkbox"]').attr('name'),
+			optionDisplayName = $clicked.find('.display-name').attr('aria-label').replace('Enable ', '');
 
 		var data = {
-			'action': 'toggle_visitor_tracking',
+			'action': 'toggle_content_mask_option',
+			'optionName': optionName,
 			'currentState': currentState,
+			'optionDisplayName': optionDisplayName,
 		};
 
 		$clicked.closest('.content-mask-option').addClass('content-mask-reloading');
@@ -116,8 +120,10 @@ jQuery(document).ready(function($){
 				classes = 'error';
 			}
 			
-			$('#content-mask-list').removeClass('tracking-enabled tracking-disabled');
-			$('#content-mask-list').addClass('tracking-' + response.newState);
+			if( optionName == 'content_mask_tracking' ){
+				$('#content-mask-list').removeClass('tracking-enabled tracking-disabled');
+				$('#content-mask-list').addClass('tracking-' + response.newState);
+			}
 
 			$clicked.closest('.content-mask-option').removeClass('content-mask-reloading');
 			$clicked.closest('.content-mask-option').find('.content-mask-value').text( response.newState );

@@ -1,7 +1,7 @@
 #content-mask-settings {
 	letter-spacing: 1.35px;
 	background: #085078;
-	background: linear-gradient(45deg, #287098, #085078);
+	background: $gradient;
 	width: calc( 100% - 48px );
 	margin: -6px -12px -12px;
 	padding: 36px 36px 12px;

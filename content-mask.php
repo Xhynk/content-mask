@@ -3,7 +3,7 @@
 	* Plugin Name:	Content Mask
 	* Plugin URI:	http://xhynk.com/content-mask/
 	* Description:	Easily embed external content into your website without complicated Domain Forwarders, Domain Masks, APIs or Scripts
-	* Version:		1.5
+	* Version:		1.5.1
 	* Author:		Alex Demchak
 	* Author URI:	http://xhynk.com/
 
@@ -45,13 +45,14 @@ class ContentMask {
 		'content_mask_method',
 		'content_mask_transient_expiration',
 		'content_mask_views',
-		'content_mask_tracking'
+		'content_mask_tracking',
+		'content_mask_user_agent_header'
 	);
 	const AJAX_ACTIONS  = array(
 		'load_more_pages',
 		'refresh_transient',
 		'toggle_content_mask',
-		'toggle_visitor_tracking'
+		'toggle_content_mask_option'
 	);
 
 	/**
@@ -307,6 +308,7 @@ class ContentMask {
 	 */
 	public function display_svg( $icon = '', $class = '', $attr = '', $echo = false ){
 			 if( $icon == 'heart' )       $html = '<svg class="'. $class .' content-mask-svg svg-fill svg-heart" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
+		else if( $icon == 'share' )       $html = '<svg class="'. $class .' content-mask-svg svg-share" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>';
 		else if( $icon == 'email' )       $html = '<svg class="'. $class .' content-mask-svg svg-email" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>';
 		else if( $icon == 'iframe' )      $html = '<svg class="'. $class .' content-mask-svg svg-iframe" '. $attr .' viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>';
 		else if( $icon == 'bookmark' )    $html = '<svg class="'. $class .' content-mask-svg svg-bookmark" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>';
@@ -525,19 +527,18 @@ class ContentMask {
 	}
 
 	/**
-	 * Toggle Visitor Tracking
+	 * Toggle Content Mask Option
 	 *
-	 * @TODO: Make this a "general" function with an option key=>value pair instead of just tracking (once we add more options)
 	 * @return void
 	 */
-	public function toggle_visitor_tracking(){
+	public function toggle_content_mask_option(){
 		if( ! $_POST ){
 			wp_die( 'Please do not call this function directly' );
 		} else {
 			extract( $_POST );
 		}
 
-		if( ! $currentState )
+		if( ! $currentState || ! $optionName )
 			$this->json_response( 403, 'No Values Detected' );
 
 		if( $currentState == 'enabled' ){
@@ -547,11 +548,11 @@ class ContentMask {
 			$newState = true;
 			$displayNewState = 'enabled';
 		} else {
-			$this->json_response( 403, 'Unauthorized Values Detected.', ['newState' => ( filter_var( get_option( 'content_mask_tracking' ), FILTER_VALIDATE_BOOLEAN ) ) ? 'enabled' : 'disabled'] );
+			$this->json_response( 403, 'Unauthorized Values Detected.', ['newState' => ( filter_var( get_option( $optionName ), FILTER_VALIDATE_BOOLEAN ) ) ? 'enabled' : 'disabled'] );
 		}
 
-		if( update_option( 'content_mask_tracking', $newState ) ){
-			$this->json_response( 200, 'Content Mask Tracking has been <strong>'. ucwords( $displayNewState ) .'</strong>.', ['newState' => $displayNewState]);
+		if( update_option( $optionName, $newState ) ){
+			$this->json_response( 200, $optionDisplayName. ' has been <strong>'. ucwords( $displayNewState ) .'</strong>.', ['newState' => $displayNewState]);
 		} else {
 			$this->json_response( 400, 'Request Failed.', ['newState', $currentState] );
 		}
@@ -607,19 +608,56 @@ class ContentMask {
 	}
 
 	/**
+	 * Set the current version of a browser for the user-agent
+	 *
+	 * @param string $browser - Either "Google Chrome", "Mozilla Firefox", or "NULL" (defaults to Chrome)
+	 * @return strin
+	 */
+	public function content_mask_user_agent( $browser = 'Google Chrome' ){
+		if( false === ( $content_mask_user_agent = get_transient( 'content_mask_user_agent' ) ) ){
+			$versions_json  = wp_remote_retrieve_body( wp_remote_get( $url ) );
+			$versions_array = json_decode( $versions, true );
+
+			if( $browser == 'Mozilla Firefox' ){
+				$version    = array_shift( $versions_array['client']['Mozilla Firefox'] );
+				$user_agent = "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/$version";
+			} else {
+				$version    = array_shift( $versions_array['client']['Google Chrome'] );
+				$user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$version Safari/537.36";
+			}
+
+			$content_mask_user_agent = set_transient( 'content_mask_user_agent', $user_agent, WEEK_IN_SECONDS );
+		}
+
+		return $content_mask_user_agent;
+	}
+
+	/**
 	 * Return "Content Mask URL" Content via Download Method
 	 *
 	 * @param string $url - The URL that contains the desired content
 	 * @param int $expiration - The number of seconds for the cache to last
+	 * @param bool $user_agent_header - Whether or not to apply advanced user agents to `wp_remote_get`
+	 *        which can be useful if a user is getting forbidden errors.
 	 * @return string - The full markup of the $url parameter
 	 */
-	public function get_page_content( $url, $expiration = 14400 ){
+	public function get_page_content( $url, $expiration = 14400, $user_agent_header = false ){
 		$transient_name = 'content_mask-'. strtolower( preg_replace( "/[^a-z0-9]/", '', $url ) );
 		
 		$body = get_transient( $transient_name );
 
 		if( false === ( $body ) || strlen( $body ) < 125 ){
-			$body = wp_remote_retrieve_body( wp_remote_get( $url ) );
+			if( $user_agent_header == true ){
+				$wp_remote_args = array(
+					'httpversion' => '1.1',
+					'timeout'     => 10,
+					'user-agent'  => $this->content_mask_user_agent()
+				);
+				$body = wp_remote_retrieve_body( wp_remote_get( $url, $wp_remote_args ) );
+			} else {
+				$body = wp_remote_retrieve_body( wp_remote_get( $url ) );
+			}
+
 			$body = $this->replace_relative_urls( $url, $body );
 
 			set_transient( $transient_name, $body, $expiration );
@@ -641,6 +679,7 @@ class ContentMask {
 		return '<!DOCTYPE html>
 			<head>
 				'.$favicon.'
+				<script>document.domain = "youthmissions.co.uk";</script>
 				<style>
 					body { margin: 0; }
 					iframe {
@@ -699,6 +738,7 @@ class ContentMask {
 
 		$this->issetor( $content_mask_tracking, false );
 
+		// Are we tracking this request?
 		if( filter_var( get_option( 'content_mask_tracking' ), FILTER_VALIDATE_BOOLEAN ) ){
 			$ip = $this->get_client_ip( true );
 			$views = get_post_meta( $post_id, 'content_mask_views', true );
@@ -725,10 +765,13 @@ class ContentMask {
 			update_post_meta( $post_id, 'content_mask_views', $views );
 		}
 
-			 if( $method === 'download' ) echo $this->get_page_content( $url, $this->time_to_seconds( $this->issetor( $content_mask_transient_expiration ) ) );
+		// Do we need to send HTTP Headers?
+		$user_agent_header = filter_var( get_option( 'content_mask_user_agent_header' ), FILTER_VALIDATE_BOOLEAN ) ? true : false;
+
+			 if( $method === 'download' ) echo $this->get_page_content( $url, $this->time_to_seconds( $this->issetor( $content_mask_transient_expiration ) ), $user_agent_header );
 		else if( $method === 'iframe' )   echo $this->get_page_iframe( $url );
 		else if( $method === 'redirect' ) wp_redirect( $url, 301 );
-		else echo $this->get_page_content( $url, $this->time_to_seconds( $this->issetor( $content_mask_transient_expiration ) ) );
+		else echo $this->get_page_content( $url, $this->time_to_seconds( $this->issetor( $content_mask_transient_expiration ) ), $user_agent_header );
 
 		exit();
 	}

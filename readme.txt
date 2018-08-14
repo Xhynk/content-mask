@@ -4,7 +4,7 @@ Donate Link: https://www.paypal.me/xhynk/
 Tags: Embed, Domain Mask, Mask, Redirect, Link
 Requires at Least: 4.1
 Tested Up To: 4.9.8
-Stable tag: 1.5
+Stable tag: 1.5.1
 Requires PHP: 5.6
 Author URI: https://xhynk.com/
 Plugin URL: https://xhynk.com/content-mask/
@@ -92,6 +92,9 @@ https://www.youtube.com/watch?v=5hEBMKSLHxI?rel=0
 
 
 == Frequently Asked Questions ==
+= Can I send custom headers with the Download Method =
+
+*No*. If this is a feature you would like implemented, please contact me.
 
 = Can You Show the Header/Footer on Content Masked Pages? =
 
@@ -125,6 +128,11 @@ If your website is secured (with https://), make sure any links on the iframed p
 4. The same WordPress page with Content Mask enabled and set to https://example.com/. You can see the URL has remained the same but the content has been entirely replaced (on the front end only) by the content from https://example.com/
 
 == Changelog ==
+= 1.5.1 =
+* Modified Admin Styles to use my preferred blue instead of green for highlighted/actionable items
+* Added a new Advanced Option to send a User Agent HTTP Header when using the Download Method to assist with some stubborn authorization issues
+* Added Feature Request link in the Admin Panel
+
 = 1.5 =
 * Started SCSS Conversion for admin.css file, broken into partials (still needs optimization)
 * Modified Content Mask Admin Panel to load only 20 Content Masks, and subsequently load 20 more when scrolled to the bottom.

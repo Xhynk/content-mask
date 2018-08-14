@@ -27,6 +27,14 @@
 		array(
 			'classes'    => 'button-secondary alignright svg-icon-button',
 			'attr'       => 'target="_blank"',
+			'href'       => 'mailto:info@xhynk.com?subject="Content Mask Feature Request"',
+			'text'       => $this->display_svg( 'share', 'icon' ).' Feature Request',
+			'echo'       => true,
+			'avoid_keys' => []
+		),
+		array(
+			'classes'    => 'button-secondary alignright svg-icon-button',
+			'attr'       => 'target="_blank"',
 			'href'       => 'https://xhynk.com/#footer',
 			'text'       => $this->display_svg( 'email', 'icon' ).' Contact Me',
 			'echo'       => true,
