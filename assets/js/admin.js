@@ -186,7 +186,7 @@ jQuery(window).load(function(){
 	jQuery(document).ready(function($){
 		if( $('.content-mask-enabled-page .override-gutenberg-notice' ).length > 0 ){
 			var contentMaskNotice     = $('.override-gutenberg-notice' ).html();
-			var contentMaskNoticeHTML = '<div class="notice notice-alt content-mask-notice notice-info">'+ contentMaskNotice +'</div>';
+			var contentMaskNoticeHTML = '<div class="components-notice notice notice-alt content-mask-notice notice-info">'+ contentMaskNotice +'</div>';
 
 			$('.components-notice-list').prepend( contentMaskNoticeHTML );
 		}
