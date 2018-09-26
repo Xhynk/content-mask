@@ -3,7 +3,7 @@
 	* Plugin Name:	Content Mask
 	* Plugin URI:	http://xhynk.com/content-mask/
 	* Description:	Easily embed external content into your website without complicated Domain Forwarders, Domain Masks, APIs or Scripts
-	* Version:		1.5.1
+	* Version:		1.5.2.1
 	* Author:		Alex Demchak
 	* Author URI:	http://xhynk.com/
 
@@ -23,6 +23,8 @@
 	*	along with this program. If not, see http://www.gnu.org/licenses.
 */
 
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 class ContentMask {
 	/**
 	 * Set the Class Instance
@@ -37,9 +39,11 @@ class ContentMask {
 	}
 
 	/**
-	 * Define Constants
+	 * Define Constant Vars
+	 * 
+	 * Use Static Vars intead of Constant, PHP 5.4 doesn't like CONST arrays.
 	 */
-	const RESERVED_KEYS = array(
+	public static $RESERVED_KEYS = array(
 		'content_mask_url',
 		'content_mask_enable',
 		'content_mask_method',
@@ -48,7 +52,7 @@ class ContentMask {
 		'content_mask_tracking',
 		'content_mask_user_agent_header'
 	);
-	const AJAX_ACTIONS  = array(
+	public static $AJAX_ACTIONS  = array(
 		'load_more_pages',
 		'refresh_transient',
 		'toggle_content_mask',
@@ -69,7 +73,7 @@ class ContentMask {
 		add_action( 'manage_posts_custom_column', [$this, 'content_mask_column_content'], 10, 2 );
 		add_action( 'manage_pages_custom_column', [$this, 'content_mask_column_content'], 10, 2 );
 
-		foreach( self::AJAX_ACTIONS as $action )
+		foreach( self::$AJAX_ACTIONS as $action )
 			add_action( "wp_ajax_$action", [$this, $action] );
 
 		add_filter( 'admin_body_class', [$this, 'add_admin_body_classes'] );
@@ -115,9 +119,9 @@ class ContentMask {
 	 */
 	public function get_post_fields( $post_id = 0 ){
 		$fields = array();
-		foreach( self::RESERVED_KEYS as $key ){
+
+		foreach( self::$RESERVED_KEYS as $key )
 			$fields[$key] = get_post_meta( $post_id, $key, true );
-		}
 
 		return $fields;
 	}
@@ -166,7 +170,7 @@ class ContentMask {
 				$content_mask_classes .= ' content-mask-enabled-page';
 			}
 
-			return "$classes $content_mask_classes test";
+			return "$classes $content_mask_classes";
 		}
 	}
 
@@ -202,7 +206,7 @@ class ContentMask {
 		$now     = time();
 		$expires = get_option( '_transient_timeout_'.$transient );
 
-			 if( ! $expires )      return 'Does Not Expire';
+			 if( ! $expires )      return 'Expired';
 		else if( $now > $expires ) return 'Expired';
 		else return human_time_diff( $now, $expires );
 	}
@@ -359,7 +363,7 @@ class ContentMask {
 	 * @param string $type - The type of message, e.g. "Warning", "Note", etc.
 	 * @return The full markup for a WordPress admin notice
 	 */
-	public function create_admin_notice( $message = '', $classes = 'notice-info', $type = 'Note') { ?>
+	public function create_admin_notice( $message = '', $classes = 'notice-info', $type = 'Note' ){ ?>
 		<div class="notice <?php echo $classes; ?>">
 			<p><strong><?php echo $type; ?></strong>: <?php echo $message; ?></p>
 		</div>
@@ -390,16 +394,21 @@ class ContentMask {
 	}
 
 	/**
+	 * Stop AJAX functions if no $_POST data
+	 */
+	public function require_POST(){
+		if( ! $_POST )
+			wp_die( 'Please do not call this function directly, only make POST requests.' );
+	}
+
+	/**
 	 * AJAX Function to Toggle Content Mask on/off per page
 	 *
 	 * @return echos a JSON response for use in JavaScript
 	 */
 	public function toggle_content_mask(){
-		if( ! $_POST ){
-			wp_die( 'Please do not call this function directly.' );
-		} else {
-			extract( $_POST );
-		}
+		$this->require_POST();
+		extract( $_POST );
 
 		if( ! $postID || ! $newState )
 			$this->json_response( 403, 'No Values Detected' );
@@ -427,11 +436,8 @@ class ContentMask {
 	 * @return void
 	 */
 	public function refresh_transient(){
-		if( ! $_POST ){
-			wp_die( 'Please do not call this function directly' );
-		} else {
-			extract( $_POST );
-		}
+		$this->require_POST();
+		extract( $_POST );
 
 		if( ! $maskURL || ! $postID || ! $transient )
 			$this->json_response( 403, 'No Values Detected' );
@@ -458,11 +464,8 @@ class ContentMask {
 	 * @return void
 	 */
 	public function load_more_pages(){
-		if( ! $_POST ){
-			wp_die( 'Please do not call this function directly' );
-		} else {
-			extract( $_POST );
-		}
+		$this->require_POST();
+		extract( $_POST );
 
 		if( ! $offset )
 			$this->json_response( 403, 'No Values Detected' );
@@ -532,11 +535,8 @@ class ContentMask {
 	 * @return void
 	 */
 	public function toggle_content_mask_option(){
-		if( ! $_POST ){
-			wp_die( 'Please do not call this function directly' );
-		} else {
-			extract( $_POST );
-		}
+		$this->require_POST();
+		extract( $_POST );
 
 		if( ! $currentState || ! $optionName )
 			$this->json_response( 403, 'No Values Detected' );
@@ -615,6 +615,8 @@ class ContentMask {
 	 */
 	public function content_mask_user_agent( $browser = 'Google Chrome' ){
 		if( false === ( $content_mask_user_agent = get_transient( 'content_mask_user_agent' ) ) ){
+			$url = 'http://vergrabber.kingu.pl/vergrabber.json';
+
 			$versions_json  = wp_remote_retrieve_body( wp_remote_get( $url ) );
 			$versions_array = json_decode( $versions, true );
 
@@ -646,7 +648,7 @@ class ContentMask {
 		
 		$body = get_transient( $transient_name );
 
-		if( false === ( $body ) || strlen( $body ) < 125 ){
+		if( false === $body || strlen( $body ) < 125 ){
 			if( $user_agent_header == true ){
 				$wp_remote_args = array(
 					'httpversion' => '1.1',
@@ -705,20 +707,13 @@ class ContentMask {
 	 * @return string - The hashed (or not) IP Address, or a not found message.
 	 */
 	public function get_client_ip( $hash = true ){
-		if( ! empty( $_SERVER['HTTP_CLIENT_IP'] ) ){
-		$ip = $_SERVER['HTTP_CLIENT_IP'];
-		} else if( ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ){
-		$ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-		} else {
-		$ip = $_SERVER['REMOTE_ADDR'];
-		}
+			 if( ! empty( $_SERVER['HTTP_CLIENT_IP'] ) )       $ip = $_SERVER['HTTP_CLIENT_IP'];
+		else if( ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+		else $ip = $_SERVER['REMOTE_ADDR'];
 
 		if( $hash == true ){
-			$from = '1234567890';
-			$to   = '_|]"^*~-+!';
-
 			$ip = str_replace( '.', '', $ip );
-			$ip = strtr( $ip, $from, $to ); // Translate string to the weird salt above.
+			$ip = strtr( $ip, '1234567890', '_|]"^*~-+!' ); // Translate string to the weird salt above.
 		}
 
 		return $this->issetor( $ip, 'IP Not Found' );
@@ -936,7 +931,7 @@ class ContentMask {
 		if( isset( $_POST ) ){
 			extract( $_POST );
 
-			foreach( self::RESERVED_KEYS as $key ) $this->issetor( ${$key} );
+			foreach( self::$RESERVED_KEYS as $key ) $this->issetor( ${$key} );
 
 			// Content Mask URL - should only allow URLs, nothing else, otherwise set it to empty/false
 			update_post_meta( $post_id, 'content_mask_url', $this->sanitize_url( $content_mask_url ) );
