@@ -1,0 +1,1 @@
+'use strict';(function(a){a(function(){var b=0;a('.code-editor').each(function(){b++;var c={indentUnit:2,tabSize:2};a(this).attr('data-mode')&&(c.mode=a(this).attr('data-mode'));var d=wp.codeEditor.defaultSettings?_.clone(wp.codeEditor.defaultSettings):{};d.codemirror=_.extend({},d.codemirror,c),window['editor_'+b]=wp.codeEditor.initialize(a(this),d)})})})(jQuery);

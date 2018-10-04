@@ -3,7 +3,7 @@
 	* Plugin Name:	Content Mask
 	* Plugin URI:	http://xhynk.com/content-mask/
 	* Description:	Easily embed external content into your website without complicated Domain Forwarders, Domain Masks, APIs or Scripts
-	* Version:		1.5.2.1
+	* Version:		1.6
 	* Author:		Alex Demchak
 	* Author URI:	http://xhynk.com/
 
@@ -56,6 +56,7 @@ class ContentMask {
 		'load_more_pages',
 		'refresh_transient',
 		'toggle_content_mask',
+		'update_content_mask_option',
 		'toggle_content_mask_option'
 	);
 
@@ -228,8 +229,14 @@ class ContentMask {
 		if( in_array( $hook, $hook_array ) ){
 			$assets_dir = plugins_url( '/assets', __FILE__ );
 			
-			wp_enqueue_script( 'content-mask-admin', "$assets_dir/js/admin.min.js", ['jquery'], filemtime( plugin_dir_path( __FILE__ ) . 'assets/js/admin.min.js' ), true );
+			wp_enqueue_script( 'content-mask-admin', "$assets_dir/js/admin.min.js", array( 'jquery' ), filemtime( plugin_dir_path( __FILE__ ) . 'assets/js/admin.min.js' ), true );
 			wp_enqueue_style( 'content-mask-admin', "$assets_dir/css/admin.min.css", [], filemtime( plugin_dir_path( __FILE__ ) . 'assets/css/admin.min.css' ) );
+		}
+
+		// Admin Panel Only
+		if( $hook == 'toplevel_page_content-mask' ){
+			wp_enqueue_code_editor( array( 'type' => 'text/html' ) );
+			wp_enqueue_script( 'content-mask-code-editor', "$assets_dir/js/code-editor.min.js", array( 'jquery' ), filemtime( plugin_dir_path( __FILE__ ) . 'assets/js/code-editor.min.js' ), true );
 		}
 	}
 
@@ -445,6 +452,14 @@ class ContentMask {
 		$body = wp_remote_retrieve_body( wp_remote_get( $maskURL ) );
 		$body = $this->replace_relative_urls( $maskURL, $body );
 
+		/**
+		 * Allow Custom Scripts and Styles in page
+		 */
+		$styles  = ( get_option( 'content_mask_allow_styles_download' ) == true ) ? wp_unslash( esc_textarea( get_option( 'content_mask_custom_styles_download' ) ) ) : '';
+		$scripts = ( get_option( 'content_mask_allow_scripts_download' ) == true ) ? wp_unslash( get_option( 'content_mask_custom_scripts_download' ) ) : '';
+
+		$body = str_replace( '</head>', '<style>'.$styles.'</style>'.$scripts.'</head>', $body );
+
 		if( ! strlen( $body > 125 ) ){
 			delete_transient( $transient );
 
@@ -455,6 +470,25 @@ class ContentMask {
 			}
 		} else {
 			$this->json_response( 400, 'Remote Content Mask URL for '. get_the_title( $postID ) .' could not be reached.' );
+		}
+	}
+
+	/**
+	 * Update a value-based Option
+	 *
+	 * @return void
+	 */
+	public function update_content_mask_option(){
+		$this->require_POST();
+		extract( $_POST );
+
+		if( ! $option || ! $value )
+			$this->json_response( 403, 'No Values Detected' );
+
+		if( update_option( $option, $value ) ){
+			$this->json_response( 200, "<strong>$label</strong> have been updated!" );
+		} else {
+			$this->json_response( 400, 'Request Failed.' );
 		}
 	}
 
@@ -521,8 +555,6 @@ class ContentMask {
 			}
 
 			$rows = ob_get_clean();
-			ob_flush();
-
 			$this->json_response( 200, $rows );
 		} else {
 			$this->json_response( 200, '<tr><td></td><td></td><td><div>No More Content Masks Found</div></td><td></td><td></td><td></td></tr>' );
@@ -571,7 +603,12 @@ class ContentMask {
 			$url = ( $protocol_relative === true ) ? str_replace( ['http://', 'https://'], '//', $url ) : $url;
 			$url = ( substr( $url, -1 ) === '/' ) ? substr( $url, 0, -1 ) : $url;
 
-			return preg_replace('~(?:src|action|href)=[\'"]\K/(?!/)[^\'"]*~', "$url$0", $str);
+			//return preg_replace('~(?:src|action|href)=[\'"]\K/(?!/)[^\'"]*~', "$url$0", $str);
+			
+			// Perhaps a slightly more robust Regex to grab ones like `<img src="img/test.jpg"/>`
+			// https://regex101.com/r/Kjcskm/1
+
+			return preg_replace('~(?:src|action|href)=[\'"]\K(?:/|(?!http))(?!/)[^\'"]*~', "$url/$0", $str);
 		} else {
 			return false;
 		}
@@ -608,17 +645,39 @@ class ContentMask {
 	}
 
 	/**
+	 * Clean URL and return just the Host
+	 *
+	 * @param string $url - The URL to parse and clean
+	 * @return string - the host of the URL
+	 */
+	public function extract_url_host( $url ){
+		// Remove Relative Slashes
+		$url = trim( $url, '/' );
+
+		// Prepend Scheme if not included
+		if( !preg_match('#^http(s)?://#', $url) ){
+    		$url = 'http://' . $url;
+		}
+
+		// Parse URL for domain
+		$url_parts = parse_url( $url );
+
+		// Return Just the Host
+		return preg_replace('/^www\./', '', $url_parts['host']);
+	}
+
+	/**
 	 * Set the current version of a browser for the user-agent
 	 *
 	 * @param string $browser - Either "Google Chrome", "Mozilla Firefox", or "NULL" (defaults to Chrome)
-	 * @return strin
+	 * @return string
 	 */
 	public function content_mask_user_agent( $browser = 'Google Chrome' ){
 		if( false === ( $content_mask_user_agent = get_transient( 'content_mask_user_agent' ) ) ){
 			$url = 'http://vergrabber.kingu.pl/vergrabber.json';
 
 			$versions_json  = wp_remote_retrieve_body( wp_remote_get( $url ) );
-			$versions_array = json_decode( $versions, true );
+			$versions_array = json_decode( $versions_json, true );
 
 			if( $browser == 'Mozilla Firefox' ){
 				$version    = array_shift( $versions_array['client']['Mozilla Firefox'] );
@@ -662,6 +721,14 @@ class ContentMask {
 
 			$body = $this->replace_relative_urls( $url, $body );
 
+			/**
+			 * Allow Custom Scripts and Styles in page
+			 */
+			$styles  = ( get_option( 'content_mask_allow_styles_download' ) == true ) ? wp_unslash( esc_textarea( get_option( 'content_mask_custom_styles_download' ) ) ) : '';
+			$scripts = ( get_option( 'content_mask_allow_scripts_download' ) == true ) ? wp_unslash( get_option( 'content_mask_custom_scripts_download' ) ) : '';
+
+			$body = str_replace( '</head>', '<style>'.$styles.'</style>'.$scripts.'</head>', $body );
+
 			set_transient( $transient_name, $body, $expiration );
 		}
 
@@ -678,10 +745,15 @@ class ContentMask {
 		$url     = is_ssl() ? str_replace( 'http://', 'https://', esc_url( $url ) ) : esc_url( $url );
 		$favicon = ( has_site_icon() ) ? '<link class="wp_favicon" href="'. get_site_icon_url() .'" rel="shortcut icon"/>' : '';
 
+		/**
+		 * Allow Custom Scripts and Styles in page now
+		 */
+		$styles  = ( get_option( 'content_mask_allow_styles_iframe' ) == true ) ? wp_unslash( esc_textarea( get_option( 'content_mask_custom_styles_iframe' ) ) ) : '';
+		$scripts = ( get_option( 'content_mask_allow_scripts_iframe' ) == true ) ? wp_unslash( get_option( 'content_mask_custom_scripts_iframe' ) ) : '';
+
 		return '<!DOCTYPE html>
 			<head>
 				'.$favicon.'
-				<script>document.domain = "youthmissions.co.uk";</script>
 				<style>
 					body { margin: 0; }
 					iframe {
@@ -689,10 +761,13 @@ class ContentMask {
 						border: none;
 						height: 100vh;
 						width: 100vw;
+						box-sizing: border-box;
 					}
+					'. $styles .'
 				</style>
 				<title>'. apply_filters( 'wp_title', get_bloginfo( 'name' ) . wp_title( '|', false, 'left' ) ) .'</title>
 				<meta name="viewport" content="width=device-width, initial-scale=1">
+				'. $scripts .'
 			</head>
 			<body>
 				<iframe width="100%" height="100%" src="'. $url .'" frameborder="0" allowfullscreen></iframe>
@@ -794,11 +869,42 @@ class ContentMask {
 					 */
 					if( $this->validate_url( $content_mask_url ) === true ){
 						/**
-						 * Junk Scripts can be hooked in all sorts of ways. We don't want
-						 * any nalnal scripts/codes etc. We want purely the target HTML.
+						 * By default, we remove_all_actions for header/footer
+						 * scripts and styles. Allow people to bring them back.
 						 */
-						foreach( ['wp_footer', 'wp_head', 'wp_enqueue_scripts', 'wp_print_scripts'] as $hook )
-							remove_all_actions( $hook );
+						$removed_assets = array( 'scripts', 'styles' );
+						
+						foreach( $removed_assets as $asset_type ){
+							if( get_option( "content_mask_allow_$asset_type" ) == true ){
+								// If Option On, Remove from Array
+								if( ( $key = array_search( $asset_type, $removed_assets ) ) !== false ){
+									unset( $removed_assets[$key] );
+								}
+							}
+						}
+
+						/**
+						 * Loop through one or both asset types to try and remove
+						 * them from the queue.
+						 */
+						if( ! empty( $removed_assets ) ){
+							foreach( $removed_assets as $asset_type ){
+								add_action( "wp_print_$asset_type", function(){
+									global ${"wp_$asset_type"};
+									${"wp_$asset_type"}->queue = array();
+								}, 100);
+							}
+						}
+
+						/**
+						 * Both Elements still in array (no options selected)
+						 * so remove all everything incase it's hooked in weirdly
+						 */
+						if( count( $removed_assets ) == 2 ){
+							foreach( array( 'wp_footer', 'wp_head', 'wp_enqueue_scripts', 'wp_print_scripts', 'wp_print_styles' ) as $hook ){
+								remove_all_actions( $hook );
+							}
+						}
 
 						$this->show_post( $post->ID );
 					} else {

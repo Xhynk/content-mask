@@ -57,14 +57,16 @@ jQuery(document).ready(function($){
 
 	$('#content-mask-list .content-mask-table-body, #the-list .column-content-mask').on( 'click', '.method svg, .content-mask-method svg', function(){
 		var	$clicked     = $(this),
-			restoreIcon  = $clicked.attr('class');
+			restoreIcon  = $clicked.attr('class'),
+			stateController,
+			postID;
 
 		if( $clicked.closest('td').hasClass('method') ){
-			var postID = $clicked.closest('tr').attr('data-attr-id');
-			var stateController = $clicked.closest('tr');
+			postID = $clicked.closest('tr').attr('data-attr-id');
+			stateController = $clicked.closest('tr');
 		} else {
-			var postID = $clicked.closest('tr').attr('id').replace('post-', '');
-			var stateController = $clicked.closest('.content-mask-method');
+			postID = $clicked.closest('tr').attr('id').replace('post-', '');
+			stateController = $clicked.closest('.content-mask-method');
 		}
 
 		var currentState = stateController.attr('data-attr-state');
@@ -133,6 +135,44 @@ jQuery(document).ready(function($){
 		}, 'json');
 	});
 
+	$('#content-mask-code button').on( 'click', function(){
+		$('.content-mask-message').remove();
+
+		var	$clicked = $(this),
+			$wrap    = $clicked.closest('.code-edit-wrapper'),
+			editor   = $clicked.attr('data-editor'),
+			value    = window[editor].codemirror.getValue(),
+			label    = $clicked.text().replace('Save ', '');
+			target   = $clicked.attr('data-target');
+
+		var data = {
+			'action': 'update_content_mask_option',
+			'option': target,
+			'value': value,
+			'label': label,
+		};
+
+		$wrap.addClass('loading');
+
+		$.post(ajaxurl, data, function(response) {
+			$('.content-mask-message').remove(); // Prevent weird interaction with existing messages
+			
+			if( response.status == 200 ){
+				classes = 'info';
+			} else if( response.status == 400 || response.status == 403 ){
+				classes = 'error';
+			}
+
+			contentMaskMessage( classes, response.message );
+			$wrap.removeClass('loading');
+			
+			$wrap.addClass('saved');
+			setTimeout(function(){
+				$wrap.removeClass('saved');
+			}, 1500);
+		}, 'json');		
+	});
+
 	$('#content-mask-list .content-mask-table-body').scroll(function(){
 		var $scrolled = $(this);
 		var tbody = $(this).find('tbody');
@@ -149,20 +189,14 @@ jQuery(document).ready(function($){
 						'offset': $(tbody).find('tr').length,
 					};
 
-					$.ajax({
-						url: ajaxurl, 
-						data: data,
-						type: 'POST',
-						dataType: 'json',
-						success: function( response ){
-							$('.content-mask-temp').html( '<h2><strong>Loading Completed.</strong></h2>' );
-							$(tbody).append( response.message);
-							setTimeout(function(){
-								$('.content-mask-temp').fadeOut();
-								$scrolled.removeClass('currently-loading');
-							}, 250 );
-						}
-					});
+					$.post(ajaxurl, data, function(response){
+						$('.content-mask-temp').html( '<h2><strong>Loading Completed.</strong></h2>' );
+						$(tbody).append( response.message);
+						setTimeout(function(){
+							$('.content-mask-temp').fadeOut();
+							$scrolled.removeClass('currently-loading');
+						}, 250 );
+					}, 'json');
 				}
 			}
 		}
@@ -172,13 +206,18 @@ jQuery(document).ready(function($){
 		$('#postdivrich').css({'height': 0, 'overflow': 'hidden'}).addClass('hide-overflow');
 	}
 
-	$('#content_mask_enable').click(function(){
+	$('#content-mask-settings').on('click', '.content-mask-check', function(){
 		if( !$(this).is(':checked') ){
 			$('#postdivrich').animate({'height': 416, 'overflow': 'visible'}).removeClass('hide-overflow');
 			$('.gutenberg').addClass('content-mask-unchecked');
 			$('.gutenberg .edit-post-visual-editor, .gutenberg .edit-post-text-editor').fadeIn();
 			$('.content-mask-notice').fadeOut();
 		}
+	});
+
+	$('.collapse-handle').click(function(){
+		$(this).toggleClass('collapsed');
+		$(this).closest('h3').next('.collapse-container').slideToggle();
 	});
 });
 

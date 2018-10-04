@@ -1,0 +1,115 @@
+/**
+ * Grid Layout
+ *
+ * I personally prefer CSS Grid, but I need to provide fallbacks because clients
+ * or client's clients have weird browser reqs. This grid I designed falls back
+ * to Flexbox, or falls way back to inline-block with 0 whitespace if flex fails.
+ *
+ * Grid types gracefully degrade; CSS Grid > Flexbox > Inline-Block > Ungrid
+ * 
+ * Grid types can be overwritten with the `grid="GRID-TYPE"` attribute.
+ */
+
+[grid] > *,
+.grid > * {
+	width: 100%;
+	box-sizing: border-box;
+}
+
+@media (min-width: 800px){
+	@supports (not (display: grid) ) and (not (display: flex) ){
+		.grid,
+		.grid[grid="inline-block"] {
+			font-size: 0;
+			vertical-align: top;
+		}
+
+		.grid > *, .grid[grid="inline-block"] > *,
+		.grid[columns="1"] > *, .grid[grid="inline-block"] > *  { width: 100%; margin: 0; display: inline-block; font-size: initial; }
+		.grid[columns="2"] > *, .grid[grid="inline-block"] > *  { width: 50%; }
+		.grid[columns="3"] > *, .grid[grid="inline-block"] > *  { width: 33.3333%; }
+		.grid[columns="4"] > *, .grid[grid="inline-block"] > *  { width: 25%; }
+		.grid[columns="6"] > *, .grid[grid="inline-block"] > *  { width: 16.6666%; }
+		.grid[columns="12"] > *, .grid[grid="inline-block"] > * { width: 8.3333%; }
+
+		.grid [col-span="1"], .grid[grid="inline-block"] [col-span="1"]  { width: 8.3333%; }
+		.grid [col-span="2"], .grid[grid="inline-block"] [col-span="2"]  { width: 16.6666%; }
+		.grid [col-span="3"], .grid[grid="inline-block"] [col-span="3"]  { width: 25%; }
+		.grid [col-span="4"], .grid[grid="inline-block"] [col-span="4"]  { width: 33.3333%; }
+		.grid [col-span="5"], .grid[grid="inline-block"] [col-span="5"]  { width: 41.6666%; }
+		.grid [col-span="6"], .grid[grid="inline-block"] [col-span="6"]  { width: 50%; }
+		.grid [col-span="7"], .grid[grid="inline-block"] [col-span="7"]  { width: 58.3333%; }
+		.grid [col-span="8"], .grid[grid="inline-block"] [col-span="8"]  { width: 66.6666%; }
+		.grid [col-span="9"], .grid[grid="inline-block"] [col-span="9"]  { width: 75%; }
+		.grid [col-span="10"], .grid[grid="inline-block"] [col-span="10"] { width: 83.3333%; }
+		.grid [col-span="11"], .grid[grid="inline-block"] [col-span="11"] { width: 91.6666%; }
+		.grid [col-span="12"], .grid[grid="inline-block"] [col-span="12"] { width: 100%; }
+	}
+
+	@supports (display: flex) {
+		.grid,
+		.grid[grid="flexbox"] {
+			display: flex;
+			flex-wrap: wrap;
+		}
+
+		.grid > *, .grid[grid="flexbox"] > *,
+		.grid[columns="1"] > *, .grid[grid="flexbox"][columns="1"] > *  { flex: calc( 100% / 1); }
+		.grid[columns="2"] > *, .grid[grid="flexbox"][columns="2"] > *  { flex: calc( 100% / 2 ); }
+		.grid[columns="3"] > *, .grid[grid="flexbox"][columns="3"] > *  { flex: calc( 100% / 3 ); }
+		.grid[columns="4"] > *, .grid[grid="flexbox"][columns="4"] > *  { flex: calc( 100% / 4 ); }
+		.grid[columns="6"] > *, .grid[grid="flexbox"][columns="6"] > *  { flex: calc( 100% / 6 ); }
+		.grid[columns="12"] > *, .grid[grid="flexbox"][columns="12"] > * { flex: calc( 100% / 12 ); }
+
+		.grid [col-span="1"], .grid[grid="flexbox"] [col-span="1"]  { flex: calc( ( 100% / 12 ) * 1 ); }
+		.grid [col-span="2"], .grid[grid="flexbox"] [col-span="2"]  { flex: calc( ( 100% / 12 ) * 2 ); }
+		.grid [col-span="3"], .grid[grid="flexbox"] [col-span="3"]  { flex: calc( ( 100% / 12 ) * 3 ); }
+		.grid [col-span="4"], .grid[grid="flexbox"] [col-span="4"]  { flex: calc( ( 100% / 12 ) * 4 ); }
+		.grid [col-span="5"], .grid[grid="flexbox"] [col-span="5"]  { flex: calc( ( 100% / 12 ) * 5 ); }
+		.grid [col-span="6"], .grid[grid="flexbox"] [col-span="6"]  { flex: calc( ( 100% / 12 ) * 6 ); }
+		.grid [col-span="7"], .grid[grid="flexbox"] [col-span="7"]  { flex: calc( ( 100% / 12 ) * 7 ); }
+		.grid [col-span="8"], .grid[grid="flexbox"] [col-span="8"]  { flex: calc( ( 100% / 12 ) * 8 ); }
+		.grid [col-span="9"], .grid[grid="flexbox"] [col-span="9"]  { flex: calc( ( 100% / 12 ) * 9 ); }
+		.grid [col-span="10"], .grid[grid="flexbox"] [col-span="10"] { flex: calc( ( 100% / 12 ) * 10 ); }
+		.grid [col-span="11"], .grid[grid="flexbox"] [col-span="11"] { flex: calc( ( 100% / 12 ) * 11 ); }
+		.grid [col-span="12"], .grid[grid="flexbox"] [col-span="12"] { flex: calc( ( 100% / 12 ) * 12 ); }
+	}
+
+	@supports (display: grid) {
+		.grid,
+		.grid[grid="css-grid"] {
+			display: grid;
+			grid-gap: 0;
+			grid-template-columns: repeat(12, 1fr);
+		}
+
+		.grid[gap] { grid-gap: 20px; }
+
+		.grid > *, .grid[grid="css-grid"] > *,
+		.grid[columns="1"] > *, .grid[grid="css-grid"][columns="1"] > *  { grid-column: auto / span 12 }
+		.grid[columns="2"] > *, .grid[grid="css-grid"][columns="2"] > *  { grid-column: auto / span 6 }
+		.grid[columns="3"] > *, .grid[grid="css-grid"][columns="3"] > *  { grid-column: auto / span 4 }
+		.grid[columns="4"] > *, .grid[grid="css-grid"][columns="4"] > *  { grid-column: auto / span 3 }
+		.grid[columns="6"] > *, .grid[grid="css-grid"][columns="6"] > *  { grid-column: auto / span 2 }
+		.grid[columns="12"] > *, .grid[grid="css-grid"][columns="12"] > * { grid-column: auto / span 1 }
+
+		.grid [col-span="1"], .grid[grid="css-grid"] [col-span="1"]  { grid-column: auto / span 1 }
+		.grid [col-span="2"], .grid[grid="css-grid"] [col-span="2"]  { grid-column: auto / span 2 }
+		.grid [col-span="3"], .grid[grid="css-grid"] [col-span="3"]  { grid-column: auto / span 3 }
+		.grid [col-span="4"], .grid[grid="css-grid"] [col-span="4"]  { grid-column: auto / span 4 }
+		.grid [col-span="5"], .grid[grid="css-grid"] [col-span="5"]  { grid-column: auto / span 5 }
+		.grid [col-span="6"], .grid[grid="css-grid"] [col-span="6"]  { grid-column: auto / span 6 }
+		.grid [col-span="7"], .grid[grid="css-grid"] [col-span="7"]  { grid-column: auto / span 7 }
+		.grid [col-span="8"], .grid[grid="css-grid"] [col-span="8"]  { grid-column: auto / span 8 }
+		.grid [col-span="9"], .grid[grid="css-grid"] [col-span="9"]  { grid-column: auto / span 9 }
+		.grid [col-span="10"], .grid[grid="css-grid"] [col-span="10"] { grid-column: auto / span 10 }
+		.grid [col-span="11"], .grid[grid="css-grid"] [col-span="11"] { grid-column: auto / span 11 }
+		.grid [col-span="12"], .grid[grid="css-grid"] [col-span="12"] { grid-column: auto / span 12 }
+
+		.grid [row-span="2"], .grid[grid="css-grid"] [row-span="2"] { grid-row: auto / span 2 }
+		.grid [row-span="3"], .grid[grid="css-grid"] [row-span="3"] { grid-row: auto / span 3 }
+		.grid [row-span="4"], .grid[grid="css-grid"] [row-span="4"] { grid-row: auto / span 4 }
+		.grid [row-span="5"], .grid[grid="css-grid"] [row-span="5"] { grid-row: auto / span 5 }
+		.grid [row-span="6"], .grid[grid="css-grid"] [row-span="6"] { grid-row: auto / span 6 }
+	}
+}

@@ -8,6 +8,27 @@
 	}
 }
 
+@keyframes content_mask_bar_reload {
+	0% {
+		@include vendor-prefix( transform, scaleX(0) );
+		transform-origin: left center;
+	}
+
+	49% {
+		transform-origin: left center;
+	}
+
+	50% {
+		@include vendor-prefix( transform, scaleX(1) );
+		transform-origin: right center;
+	}
+
+	100% {
+		@include vendor-prefix( transform, scaleX(0) );
+		transform-origin: right center;
+	}
+}
+
 @keyframes option_reload {
 	0% {
 		@include vendor-prefix( transform, rotate(0deg) );
