@@ -102,123 +102,89 @@
 	<div class="collapse-container">
 		<div id="content-mask-options" class="content-mask-admin-panel">
 			<div class="grid" columns="4">
-				<div class="content-mask-option">
-					<label class="content-mask-checkbox" for="content_mask_tracking" data-attr="<?php echo $tracking_enabled; ?>">
-						<span class="display-name" aria-label="Enable Content Mask Tracking"></span>
-						<input type="checkbox" name="content_mask_tracking" id="content_mask_tracking" <?php echo $tracking_checked; ?> />
-						<span class="content-mask-check">
-							<span class="content-mask-check_ajax">
-								<?php echo $this->display_svg( 'checkmark', 'icon' ); ?>
-							</span>
-						</span>
-					</label>
-					<span class="content-mask-option_label">Visitor Tracking: <strong class="content-mask-value"><?php echo ucwords( $tracking_enabled ); ?></strong> <span class="content-mask-hover-help" data-help="Vistor Tracking will give you a rough estimate of how many views your Content Masked Pages are getting.">?</span></span>
-				</div>
-				<div class="content-mask-option">
-					<label class="content-mask-checkbox" for="content_mask_user_agent_header" data-attr="<?php echo $user_agent_header_enabled; ?>">
-						<span class="display-name" aria-label="Enable HTTP Headers for Download Method"></span>
-						<input type="checkbox" name="content_mask_user_agent_header" id="content_mask_user_agent_header" <?php echo $user_agent_header_checked; ?> />
-						<span class="content-mask-check">
-							<span class="content-mask-check_ajax">
-								<?php echo $this->display_svg( 'checkmark', 'icon' ); ?>
-							</span>
-						</span>
-					</label>
-					<span class="content-mask-option_label">HTTP Headers: <strong class="content-mask-value"><?php echo ucwords( $user_agent_header_enabled ); ?></strong> <span class="content-mask-hover-help" data-help="If you're getting errors, especially '403 Forbidden' errors, when using the Download Method, try enabling this option.">?</span></span>
-				</div>
+				<?php
+					$check_options = array(
+						array(
+							'name'  => 'tracking',
+							'label' => 'Visitor Tracking',
+							'help'  => 'Vistor Tracking will give you a rough estimate of how many views your Content Masked Pages are getting.'
+						),
+						array(
+							'name'  => 'user_agent_header',
+							'label' => 'HTTP Headers',
+							'help'  => 'If you\'re getting errors, especially \'403 Forbidden\' errors, when using the Download Method, try enabling this option.'
+						),
+					);
+
+					foreach( $check_options as $option ){
+						$option = (object) $option; ?>
+						<div class="content-mask-option">
+							<label class="content-mask-checkbox" for="content_mask_<?php echo $option->name; ?>" data-attr="<?php echo ${$option->name.'_enabled'}; ?>">
+								<span class="display-name" aria-label="Enable <?php echo $option->label; ?>"></span>
+								<input type="checkbox" name="content_mask_<?php echo $option->name; ?>" id="content_mask_<?php echo $option->name; ?>" <?php echo ${$option->name.'_checked'}; ?> />
+								<span class="content-mask-check">
+									<span class="content-mask-check_ajax">
+										<?php echo $this->display_svg( 'checkmark', 'icon' ); ?>
+									</span>
+								</span>
+							</label>
+							<span class="content-mask-option_label"><?php echo $option->label; ?>: <strong class="content-mask-value"><?php echo ucwords( ${$option->name.'_enabled'} ); ?></strong> <span class="content-mask-hover-help" data-help="<?php echo $option->help; ?>">?</span></span>
+						</div>
+					<?php }
+				?>
 			</div>
 			<div id="content-mask-code">
 				<div class="content-mask-admin-panel">
-					<div class="grid" columns="2">
-						<div class="content-mask-option">
-							<div class="code-edit-wrapper">
-								<label class="content-mask-textarea" for="content_mask_custom_scripts_download">
-									<strong class="display-name">Custom Scripts (Download Method)</strong> <span>(Include <pre style="display:inline;">&lt;script&gt;</pre> tags)</span><br>
-									<textarea id="content_mask_custom_scripts_download" rows="4" data-type="text/html" data-mode="htmlmixed" name="content_mask_custom_scripts_download" class="widefat textarea code-editor"><?php echo wp_unslash( esc_textarea( get_option( 'content_mask_custom_scripts_download' ) ) ); ?></textarea>
-									<button id="save-scripts" data-target="content_mask_custom_scripts_download" data-editor="editor_1" class="wp-core-ui button button-primary">Save Download Scripts</button>
-								</label>
-							</div>
-							<div>
-								<label class="content-mask-checkbox" for="content_mask_allow_scripts_download" data-attr="<?php echo $allow_scripts_download_enabled; ?>">
-									<span class="display-name" aria-label="Custom Scripts for Download Method"></span>
-									<input type="checkbox" name="content_mask_allow_scripts_download" id="content_mask_allow_scripts_download" <?php echo $allow_scripts_download_checked; ?> />
-									<span class="content-mask-check">
-										<span class="content-mask-check_ajax">
-											<?php echo $this->display_svg( 'checkmark', 'icon' ); ?>
-										</span>
-									</span>
-								</label>
-								<span class="content-mask-option_label">Custom Scripts for Download Method: <strong class="content-mask-value"><?php echo ucwords( $allow_scripts_download_enabled ); ?></strong> <span class="content-mask-hover-help" data-help="Add custom scripts to pages masked with the Download method. Useful if you would like to add Analytics. Note: These scripts will apply to all pages masked with the Download method.">?</span></span>
-							</div>
-						</div>
-						<div class="content-mask-option">
-							<div class="code-edit-wrapper">
-								<label class="content-mask-textarea" for="content_mask_custom_styles_download">
-									<strong class="display-name">Custom CSS (Download Method)</strong> <span>(Don't include <pre style="display:inline;">&lt;style&gt;</pre> tags)</span><br>
-									<textarea id="content_mask_custom_styles_download" rows="4" data-type="text/css" data-mode="css" name="content_mask_custom_styles_download" class="widefat textarea code-editor"><?php echo wp_unslash( esc_textarea( get_option( 'content_mask_custom_styles_download' ) ) ); ?></textarea>
-									<button id="save-styles" data-target="content_mask_custom_styles_download" data-editor="editor_2" class="wp-core-ui button button-primary">Save Download Styles</button>
-								</label>
-							</div>
-							<div>
-								<label class="content-mask-checkbox" for="content_mask_allow_styles_download" data-attr="<?php echo $allow_styles_download_enabled; ?>">
-									<span class="display-name" aria-label="Custom Styles for Download Method"></span>
-									<input type="checkbox" name="content_mask_allow_styles_download" id="content_mask_allow_styles_download" <?php echo $allow_styles_download_checked; ?> />
-									<span class="content-mask-check">
-										<span class="content-mask-check_ajax">
-											<?php echo $this->display_svg( 'checkmark', 'icon' ); ?>
-										</span>
-									</span>
-								</label>
-								<span class="content-mask-option_label">Custom CSS for Download Method: <strong class="content-mask-value"><?php echo ucwords( $allow_styles_download_enabled ); ?></strong> <span class="content-mask-hover-help" data-help="Add custom styles to pages masked with the Download method. Note: These styles will apply to all pages masked with the Download Method.">?</span></span>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class="content-mask-admin-panel">
-					<div class="grid" columns="2">
-						<div class="content-mask-option">
-							<div class="code-edit-wrapper">
-								<label class="content-mask-textarea" for="content_mask_custom_scripts_iframe">
-									<strong class="display-name">Custom Scripts (Iframe Method)</strong> <span>(Include <pre style="display:inline;">&lt;script&gt;</pre> tags)</span><br>
-									<textarea id="content_mask_custom_scripts_iframe" rows="4" data-type="text/html" data-mode="htmlmixed" name="content_mask_custom_scripts_iframe" class="widefat textarea code-editor"><?php echo wp_unslash( esc_textarea( get_option( 'content_mask_custom_scripts_iframe' ) ) ); ?></textarea>
-									<button id="save-scripts" data-target=" " data-editor="editor_3" class="wp-core-ui button button-primary">Save Iframe Scripts</button>
-								</label>
-							</div>
-							<div>
-								<label class="content-mask-checkbox" for="content_mask_allow_scripts_iframe" data-attr="<?php echo $allow_scripts_iframe_enabled; ?>">
-									<span class="display-name" aria-label="Custom Scripts for Iframe Method"></span>
-									<input type="checkbox" name="content_mask_allow_scripts_iframe" id="content_mask_allow_scripts_iframe" <?php echo $allow_scripts_iframe_checked; ?> />
-									<span class="content-mask-check">
-										<span class="content-mask-check_ajax">
-											<?php echo $this->display_svg( 'checkmark', 'icon' ); ?>
-										</span>
-									</span>
-								</label>
-								<span class="content-mask-option_label">Custom Scripts for Iframe Method: <strong class="content-mask-value"><?php echo ucwords( $allow_scripts_iframe_enabled ); ?></strong> <span class="content-mask-hover-help" data-help="Add custom scripts to pages masked with Iframe method. Useful if you would like to add Analytics. Note: These scripts will apply to all pages masked with the Download method.">?</span></span>
-							</div>
-						</div>
-						<div class="content-mask-option">
-							<div class="code-edit-wrapper">
-								<label class="content-mask-textarea" for="content_mask_custom_styles_iframe">
-									<strong class="display-name">Custom CSS (Iframe Method)</strong> <span>(Don't include <pre style="display:inline;">&lt;style&gt;</pre> tags)</span><br>
-									<textarea id="content_mask_custom_styles_iframe" rows="4" data-type="text/css" data-mode="css" name="content_mask_custom_styles_iframe" class="widefat textarea code-editor"><?php echo wp_unslash( esc_textarea( get_option( 'content_mask_custom_styles_iframe' ) ) ); ?></textarea>
-									<button id="save-styles" data-target="content_mask_custom_styles_iframe" data-editor="editor_4" class="wp-core-ui button button-primary">Save Iframe Styles</button>
-								</label>
-							</div>
-							<div>
-								<label class="content-mask-checkbox" for="content_mask_allow_styles_iframe" data-attr="<?php echo $allow_styles_iframe_enabled; ?>">
-									<span class="display-name" aria-label="Custom Styles for Iframe Method"></span>
-									<input type="checkbox" name="content_mask_allow_styles_iframe" id="content_mask_allow_styles_iframe" <?php echo $allow_styles_iframe_checked; ?> />
-									<span class="content-mask-check">
-										<span class="content-mask-check_ajax">
-											<?php echo $this->display_svg( 'checkmark', 'icon' ); ?>
-										</span>
-									</span>
-								</label>
-								<span class="content-mask-option_label">Custom CSS for Iframe Method: <strong class="content-mask-value"><?php echo ucwords( $allow_styles_iframe_enabled ); ?></strong> <span class="content-mask-hover-help" data-help="Add custom styles to pages masked with the Iframe method. Note: These styles will apply to all pages masked with the Download Method. Note, you can't style content INSIDE the iframe, just the iframe itself.">?</span></span>
-							</div>
-						</div>
-					</div>
+					<?php
+						$method_types = array( 'download', 'iframe' );
+
+						$code_types = array(
+							array(
+								'name'   => 'scripts',
+								'editor' => 'text/html',
+								'mode'   => 'htmlmixed',
+								'notes'  => '(Include <pre style="display:inline;">&lt;script&gt;</pre> tags)',
+							),
+							array(
+								'name'   => 'styles',
+								'editor' => 'text/css',
+								'mode'   => 'css',
+								'notes'  => '(Do NOT include <pre style="display:inline;">&lt;style&gt;</pre> tags)',
+							)
+						);
+
+						$count = 0;
+
+						foreach( $method_types as $method ){
+							foreach( $code_types as $type ){
+								$type = (object) $type; $count++;
+
+								if( $count % 2 != 0 ) echo '<div class="grid" columns="2">'; ?>
+									<div class="content-mask-option">
+										<div class="code-edit-wrapper">
+											<label class="content-mask-textarea" for="content_mask_custom_<?php echo $type->name.'_'.$method; ?>">
+												<strong class="display-name">Custom <?php echo ucwords( $type->name ); ?> (<?php echo ucwords( $method ); ?> Method)</strong> <span><?php echo $type->notes; ?></span><br>
+												<textarea id="content_mask_custom_<?php echo $type->name.'_'.$method; ?>" rows="4" data-type="<?php echo $type->editor; ?>" data-mode="<?php echo $type->mode; ?>" name="content_mask_custom_<?php echo $type->name.'_'.$method; ?>" class="widefat textarea code-editor"><?php echo wp_unslash( esc_textarea( get_option( 'content_mask_custom_'.$type->name.'_'.$method ) ) ); ?></textarea>
+												<button id="save-scripts" data-target="content_mask_custom_<?php echo $type->name.'_'.$method; ?>" data-editor="editor_<?php echo $count; ?>" class="wp-core-ui button button-primary">Save <?php echo ucwords( $method ).' '. ucwords( $type->name ); ?></button>
+											</label>
+										</div>
+										<div>
+											<label class="content-mask-checkbox" for="content_mask_allow_<?php echo $type->name.'_'.$method; ?>" data-attr="<?php echo ${'allow_'.$type->name.'_'.$method.'_enabled'}; ?>">
+												<span class="display-name" aria-label="Custom <?php echo ucwords( $type->name ); ?> for <?php echo ucwords( $method ); ?> Method"></span>
+												<input type="checkbox" name="content_mask_allow_<?php echo $type->name.'_'.$method; ?>" id="content_mask_allow_<?php echo $type->name.'_'.$method; ?>" <?php echo ${'allow_'.$type->name.'_'.$method.'_checked'}; ?> />
+												<span class="content-mask-check">
+													<span class="content-mask-check_ajax">
+														<?php echo $this->display_svg( 'checkmark', 'icon' ); ?>
+													</span>
+												</span>
+											</label>
+											<span class="content-mask-option_label">Custom <?php echo ucwords( $type->name ); ?> for <?php echo ucwords( $method ); ?> Method: <strong class="content-mask-value"><?php echo ucwords( ${'allow_'.$type->name.'_'.$method.'_enabled'} ); ?></strong> <span class="content-mask-hover-help" data-help="Add custom <?php echo $type->name; ?> to pages masked with the <?php echo ucwords( $method ); ?> method. Useful if you would like to add Analytics. Note: These <?php echo ucwords( $type->name ); ?> will apply to all pages masked with the <?php echo ucwords( $method ); ?> method.">?</span></span>
+										</div>
+									</div>
+								<?php if( $count % 2 == 0 ) echo '</div>';
+							}
+						}
+					?>
 				</div>
 			</div>
 		</div>
