@@ -3,7 +3,7 @@
 		array(
 			'classes'    => 'button-secondary alignright svg-icon-button',
 			'attr'       => 'target="_blank"',
-			'href'       => 'https://xhynk.com/#donate',
+			'href'       => 'https://www.paypal.me/xhynk/',
 			'text'       => $this->display_svg( 'heart', 'icon' ).' Donate',
 			'echo'       => true,
 			'avoid_keys' => ['irdr','trey','river','fahn']

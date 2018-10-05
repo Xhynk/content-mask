@@ -3,7 +3,7 @@
 	* Plugin Name:	Content Mask
 	* Plugin URI:	http://xhynk.com/content-mask/
 	* Description:	Easily embed external content into your website without complicated Domain Forwarders, Domain Masks, APIs or Scripts
-	* Version:		1.6.0.1
+	* Version:		1.6.0.2
 	* Author:		Alex Demchak
 	* Author URI:	http://xhynk.com/
 
@@ -750,10 +750,12 @@ class ContentMask {
 		 */
 		$styles  = ( get_option( 'content_mask_allow_styles_iframe' ) == true ) ? wp_unslash( esc_textarea( get_option( 'content_mask_custom_styles_iframe' ) ) ) : '';
 		$scripts = ( get_option( 'content_mask_allow_scripts_iframe' ) == true ) ? wp_unslash( get_option( 'content_mask_custom_scripts_iframe' ) ) : '';
-
-		return '<!DOCTYPE html>
+	
+		ob_start(); ?>
+		
+		<!DOCTYPE html>
 			<head>
-				'.$favicon.'
+				<?php echo $favicon; ?>
 				<style>
 					body { margin: 0; }
 					iframe {
@@ -763,16 +765,38 @@ class ContentMask {
 						width: 100vw;
 						box-sizing: border-box;
 					}
-					'. $styles .'
+					<?php echo $styles; ?>
 				</style>
-				<title>'. apply_filters( 'wp_title', get_bloginfo( 'name' ) . wp_title( '|', false, 'left' ) ) .'</title>
+				<title><?php echo apply_filters( 'wp_title', get_bloginfo( 'name' ) . wp_title( '|', false, 'left' ) ); ?></title>
 				<meta name="viewport" content="width=device-width, initial-scale=1">
-				'. $scripts .'
+				<script type="text/javascript">
+					// From https://gist.github.com/niyazpk/f8ac616f181f6042d1e0
+					function updateUrlParameter(uri, key, value) {
+					    // remove the hash part before operating on the uri
+					    var i = uri.indexOf("#");
+					    var hash = i === -1 ? ""  : uri.substr(i);
+					         uri = i === -1 ? uri : uri.substr(0, i);
+
+					    var re = new RegExp("([?&])" + key + "=.*?(&|$)", "i");
+					    var separator = uri.indexOf("?") !== -1 ? "&" : "?";
+					    if (uri.match(re)) {
+					        uri = uri.replace(re, "$1" + key + "=" + value + "$2");
+					    } else {
+					        uri = uri + separator + key + "=" + value;
+					    }
+					    return uri + hash;  // finally append the hash as well
+					}
+				</script>
+				<?php do_action( 'content_mask_iframe_header' ); ?>
+				<?php echo $scripts; ?>
 			</head>
 			<body>
-				<iframe width="100%" height="100%" src="'. $url .'" frameborder="0" allowfullscreen></iframe>
+				<iframe id="content-mask-frame" width="100%" height="100%" src="<?php echo $url; ?>" frameborder="0" allowfullscreen></iframe>
+				<?php do_action( 'content_mask_iframe_footer' ); ?>
 			</body>
-		</html>';
+		</html>
+
+		<?php return ob_get_clean();
 	}
 
 	/**
@@ -868,44 +892,16 @@ class ContentMask {
 					 * Now validate the desired URL.
 					 */
 					if( $this->validate_url( $content_mask_url ) === true ){
-						/**
-						 * By default, we remove_all_actions for header/footer
-						 * scripts and styles. Allow people to bring them back.
-						 */
-						$removed_assets = array( 'scripts', 'styles' );
 						
-						foreach( $removed_assets as $asset_type ){
-							if( get_option( "content_mask_allow_$asset_type" ) == true ){
-								// If Option On, Remove from Array
-								if( ( $key = array_search( $asset_type, $removed_assets ) ) !== false ){
-									unset( $removed_assets[$key] );
-								}
-							}
-						}
-
 						/**
-						 * Loop through one or both asset types to try and remove
-						 * them from the queue.
+						 * Remove all scripts and styles, since they affect page content
+						 * if left alone, depending on how they're hooked in. The external
+						 * content isnt' designed with this site's plugins/scripts/styles
+						 * in mind, so the site can look strange.
 						 */
-						if( ! empty( $removed_assets ) ){
-							foreach( $removed_assets as $asset_type ){
-								add_action( "wp_print_$asset_type", function(){
-									global ${"wp_$asset_type"};
-									${"wp_$asset_type"}->queue = array();
-								}, 100);
-							}
-						}
-
-						/**
-						 * Both Elements still in array (no options selected)
-						 * so remove all everything incase it's hooked in weirdly
-						 */
-						if( count( $removed_assets ) == 2 ){
-							foreach( array( 'wp_footer', 'wp_head', 'wp_enqueue_scripts', 'wp_print_scripts', 'wp_print_styles' ) as $hook ){
-								remove_all_actions( $hook );
-							}
-						}
-
+						foreach( array( 'wp_footer', 'wp_head', 'wp_enqueue_scripts', 'wp_print_scripts', 'wp_print_styles' ) as $hook )
+							remove_all_actions( $hook );
+						
 						$this->show_post( $post->ID );
 					} else {
 						/**
