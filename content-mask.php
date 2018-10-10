@@ -3,7 +3,7 @@
 	* Plugin Name:	Content Mask
 	* Plugin URI:	http://xhynk.com/content-mask/
 	* Description:	Easily embed external content into your website without complicated Domain Forwarders, Domain Masks, APIs or Scripts
-	* Version:		1.6.0.2
+	* Version:		1.6.0.3
 	* Author:		Alex Demchak
 	* Author URI:	http://xhynk.com/
 
