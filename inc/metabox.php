@@ -1,5 +1,6 @@
 <?php extract( $this->get_post_fields( get_the_ID() ) ); ?>
 <div id="content-mask-settings">
+	<?php wp_nonce_field( 'save_post', 'content_mask_meta_nonce' ); ?>
 	<div class="content-mask-enable-container">
 		<label class="content-mask-checkbox" for="content_mask_enable">
 			<span aria-label="Enable Content Mask"></span>
