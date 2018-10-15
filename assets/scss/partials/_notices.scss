@@ -1,0 +1,22 @@
+#content-mask-message {
+	position: fixed;
+	bottom: 20px;
+	right: 20px;
+	max-width: 80%;
+}
+
+.content-mask-message-content {
+	background: #0095ee;
+	font-size: 16px;
+	font-weight: 100;
+	line-height: 1.625;
+	padding: 10px 20px !important;
+	color: #fff;
+	border-radius: 4px;
+	box-shadow: 0 6px 35px -8px #000;
+}
+
+.content-mask-message-content.error,
+.content-mask-message-content.warning {
+	background: #ee3d69;
+}

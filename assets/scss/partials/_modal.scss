@@ -1,0 +1,68 @@
+.blur #content-mask {
+	filter: blur(1px) brightness(80%);
+	box-shadow: 0 0 10px 10px #000;
+}
+
+#content-mask-modal-container {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.content-mask-modal {
+	text-align: center;
+	width: 360px;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%,-50%);
+	background: #fff;
+	padding: 20px;
+	border-radius: 5px;
+	box-shadow: 0 10px 50px -17px;
+}
+
+.content-mask-modal svg {
+	width: 60px;
+}
+
+.content-mask-modal.warning {
+	border-top: 7px solid $enabled;
+}
+
+.content-mask-modal svg {
+	color: $enabled;
+}
+
+.content-mask-modal.warning {
+	border-top: 7px solid #ee3d69;
+}
+
+.content-mask-modal.warning svg {
+	color: #ee3d69;
+}
+
+.content-mask-modal p {
+	font-size: 14px;
+	color: #999;
+	letter-spacing: .3px;
+}
+
+.content-mask-modal button {
+	border: none;
+	padding: 10px 20px;
+	margin: 12px 8px 0;
+	border-radius: 4px;
+	background: #eee;
+	font-size: 16px;
+	font-weight: 500;
+}
+
+.content-mask-modal button:hover {
+	background: #0095ee;
+	box-shadow: 0 3px 9px -5px #000;
+	cursor: pointer;
+	color: #fff;
+}
