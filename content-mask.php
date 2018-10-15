@@ -55,6 +55,7 @@ class ContentMask {
 	public static $AJAX_ACTIONS  = array(
 		'load_more_pages',
 		'refresh_transient',
+		'delete_content_mask',
 		'toggle_content_mask',
 		'update_content_mask_option',
 		'toggle_content_mask_option'
@@ -193,7 +194,11 @@ class ContentMask {
 		if( ! current_user_can( 'edit_posts' ) ){
 			wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
 		} else {
-			require_once dirname(__FILE__).'/inc/admin-panel.php';	
+			if( strpos( site_url(), 'xhynk.com' ) !== false ){
+				require_once dirname(__FILE__).'/inc/admin-panel-v2.php';
+			} else {
+				require_once dirname(__FILE__).'/inc/admin-panel.php';
+			}
 		}
 	}
 
@@ -265,46 +270,61 @@ class ContentMask {
 		extract( $post_fields );
 
 		switch( $column ){
-			case "method":
+			case 'method':
 				echo $this->display_svg( $content_mask_method, 'icon', "title='$content_mask_method'" );
 				break;
 
-			case "title":
-				echo '<a target="_blank" href="'. get_permalink( $post_id ) .'"><strong>'. get_the_title( $post_id ) .'</strong></a><span class="row-actions"> - <a href="'. get_edit_post_link( $post_id ) .'">Edit</a></span>';
+			case 'info':
+				echo '<strong><a href="'. get_the_permalink() .'" target="_blank">'. get_the_title() .'</a></strong><br>';
+				echo '<span class="meta"><a href="'. $content_mask_url .'" target="_blank">'. $content_mask_url .'</a></span>';
 				break;
 
-			case "mask-url":
-				echo "<a href='$content_mask_url' target='_blank'>$content_mask_url</a>";
-				break;
-
-			case "cache-expires":
+			case 'status':
+				echo '<span class="label">'. $content_mask_method .'</span>';
 				if( $content_mask_method === 'download' ){
-					$transient                = 'content_mask-'. strtolower( preg_replace( "/[^a-z0-9]/", '', $content_mask_url ) );
-					$data_expiration          = $content_mask_transient_expiration ? $this->time_to_seconds( $this->issetor( $content_mask_transient_expiration ) ) : $this->time_to_seconds( '4 hour' );
-					$data_expiration_readable = $content_mask_transient_expiration ? $content_mask_transient_expiration : '4 hours';
-					
-					echo '<span class="transient-expiration">'. $this->get_transient_expiration( $transient ) .'</span>';
-					echo '<span class="row-actions"> - <a href="#" data-expiration-readable="'. $data_expiration_readable .'" data-expiration="'. $data_expiration .'" data-transient="'. $transient .'">Refresh</a></span>';
-				} else {
-					echo '<span style="opacity:.4;">N/A</span>';
+					$transient = 'content_mask-'. strtolower( preg_replace( "/[^a-z0-9]/", '', $content_mask_url ) );
+					echo '<br><span class="meta transient-expiration">'. $this->get_transient_expiration( $transient ) .'</span>';
 				}
 				break;
 
-			case "post-type":
-				echo '<div data-post-status="'. get_post_status( $post_id ) .'">'. get_post_type( $post_id ) .'</div>';
+			case 'type':
+				echo '<strong>'. ucwords( str_replace( array( '-', '_' ), ' ', get_post_type() ) ) .'</strong><br><span class="meta">'. get_post_status() .'</span>';
 				break;
 
-			case "views":
-				if( ! $content_mask_views || $content_mask_views == '' ){
-					echo 'No Views Yet';
-				} else {
-					$total  = ( $content_mask_views['total'] )  ? $content_mask_views['total']  : 0;
-					$anon   = ( $content_mask_views['anon'] )   ? $content_mask_views['anon']   : 0;
-					$unique = ( $content_mask_views['unique'] ) ? count( $content_mask_views['unique'] ) : 0;
-					
-					echo "Views: <strong>$total</strong> | Non-User: <strong>$anon</strong> | Unique: <strong>$unique</strong>";
+			case 'views':
+				if( $content_mask_views || $content_mask_views != '' ){
+					$total = ( $content_mask_views['total'] ) ? $content_mask_views['total'] : 0;
+					echo '<strong>'. $total .'</strong><br><span class="meta">Total Views</span>';
 				}
 				break;
+
+			case 'non-user':
+				if( $content_mask_views || $content_mask_views != '' ){
+					$anon = ( $content_mask_views['anon'] ) ? $content_mask_views['anon'] : 0;
+					echo '<strong>'. $anon .'</strong><br><span class="meta">Non-User Views</span>';
+				}
+				break;
+
+			case 'unique':
+				if( $content_mask_views || $content_mask_views != '' ){
+					$unique = ( $content_mask_views['unique'] ) ? $content_mask_views['unique'] : 0;
+					echo '<strong>'. count( $unique ) .'</strong><br><span class="meta">Unique Views</span>';
+				}
+				break;
+
+			case 'more':
+				$transient                = 'content_mask-'. strtolower( preg_replace( "/[^a-z0-9]/", '', $content_mask_url ) );
+				$data_expiration          = $content_mask_transient_expiration ? $this->time_to_seconds( $this->issetor( $content_mask_transient_expiration ) ) : $this->time_to_seconds( '4 hour' );
+				$data_expiration_readable = $content_mask_transient_expiration ? $content_mask_transient_expiration : '4 hours'; ?>
+				<div class="more-container">
+					<?php echo $this->display_svg( 'more-horizontal', 'icon', "title='More Options'" ); ?>
+					<ul class="more-nav">
+						<li><a href="<?php echo get_edit_post_link( $post_id ); ?>"><?php echo $this->display_svg( 'edit', 'icon', "title='Edit Content Mask'" ); ?> <span>Edit <?php echo ucwords( str_replace( array( '-', '_' ), ' ', get_post_type() ) ); ?></span></a></li>
+						<?php if( $content_mask_method == 'download' ) ?><li><a href="#" class="refresh-transient" data-expiration-readable="<?php echo $data_expiration_readable; ?>" data-expiration="<?php echo $data_expiration; ?>" data-transient="<?php echo $transient; ?>"><?php echo $this->display_svg( 'refresh', 'icon', "title='Edit Content Mask'" ); ?> <span>Refresh Transient</span></a></li>
+						<li><a href="#" class="remove-mask"><?php echo $this->display_svg( 'trash', 'icon', "title='Delete Mask'" ); ?> <span>Remove Mask</span></a></li>
+					</ul>
+				</div>
+				<?php break;
 		}
 	}
 
@@ -318,17 +338,23 @@ class ContentMask {
 	 * @return string - The final usable SVG HTML
 	 */
 	public function display_svg( $icon = '', $class = '', $attr = '', $echo = false ){
-			 if( $icon == 'heart' )       $html = '<svg class="'. $class .' content-mask-svg svg-fill svg-heart" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
-		else if( $icon == 'share' )       $html = '<svg class="'. $class .' content-mask-svg svg-share" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>';
-		else if( $icon == 'email' )       $html = '<svg class="'. $class .' content-mask-svg svg-email" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>';
-		else if( $icon == 'iframe' )      $html = '<svg class="'. $class .' content-mask-svg svg-iframe" '. $attr .' viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>';
-		else if( $icon == 'bookmark' )    $html = '<svg class="'. $class .' content-mask-svg svg-bookmark" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>';
-		else if( $icon == 'download' )    $html = '<svg class="'. $class .' content-mask-svg svg-download" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 17 12 21 16 17"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"></path></svg>';
-		else if( $icon == 'redirect' )    $html = '<svg class="'. $class .' content-mask-svg svg-redirect" '. $attr .' viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>';
-		else if( $icon == 'arrow-up' )    $html = '<svg class="'. $class .' content-mask-svg svg-arrow-up" '. $attr .' viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>';
-		else if( $icon == 'checkmark' )   $html = '<svg class="'. $class .' content-mask-svg svg-checkmark" '. $attr .' width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
-		else if( $icon == 'arrow-down' )  $html = '<svg class="'. $class .' content-mask-svg svg-arrow-down" '. $attr .' viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
-		else if( $icon == 'help-circle' ) $html = '<svg class="'. $class .' content-mask-svg svg-help-circle" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12" y2="17"></line></svg>';
+			 if( $icon == 'box' )             $html = '<svg class="'. $class .' content-mask-svg svg-box" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.89 1.45l8 4A2 2 0 0 1 22 7.24v9.53a2 2 0 0 1-1.11 1.79l-8 4a2 2 0 0 1-1.79 0l-8-4a2 2 0 0 1-1.1-1.8V7.24a2 2 0 0 1 1.11-1.79l8-4a2 2 0 0 1 1.78 0z"></path><polyline points="2.32 6.16 12 11 21.68 6.16"></polyline><line x1="12" y1="22.76" x2="12" y2="11"></line></svg>';
+		else if( $icon == 'edit' )            $html = '<svg class="'. $class .' content-mask-svg svg-edit" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.66V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.34"></path><polygon points="18 2 22 6 12 16 8 16 8 12 18 2"></polygon></svg>';
+		else if( $icon == 'heart' )           $html = '<svg class="'. $class .' content-mask-svg svg-fill svg-heart" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
+		else if( $icon == 'share' )           $html = '<svg class="'. $class .' content-mask-svg svg-share" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>';
+		else if( $icon == 'email' )           $html = '<svg class="'. $class .' content-mask-svg svg-email" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>';
+		else if( $icon == 'trash' )           $html = '<svg class="'. $class .' content-mask-svg svg-email" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
+		else if( $icon == 'iframe' )          $html = '<svg class="'. $class .' content-mask-svg svg-iframe" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>';
+		else if( $icon == 'refresh' )         $html = '<svg class="'. $class .' content-mask-svg svg-iframe" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>';
+		else if( $icon == 'bookmark' )        $html = '<svg class="'. $class .' content-mask-svg svg-bookmark" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>';
+		else if( $icon == 'download' )        $html = '<svg class="'. $class .' content-mask-svg svg-download" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 17 12 21 16 17"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"></path></svg>';
+		else if( $icon == 'redirect' )        $html = '<svg class="'. $class .' content-mask-svg svg-redirect" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>';
+		else if( $icon == 'arrow-up' )        $html = '<svg class="'. $class .' content-mask-svg svg-arrow-up" '. $attr .' viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>';
+		else if( $icon == 'checkmark' )       $html = '<svg class="'. $class .' content-mask-svg svg-checkmark" '. $attr .' width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+		else if( $icon == 'arrow-down' )      $html = '<svg class="'. $class .' content-mask-svg svg-arrow-down" '. $attr .' viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+		else if( $icon == 'help-circle' )     $html = '<svg class="'. $class .' content-mask-svg svg-help-circle" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12" y2="17"></line></svg>';
+		else if( $icon == 'content-mask' )    $html = '<svg class="'. $class .' content-mask-svg svg-content-mask" '. $attr .' viewBox="0 0 359 460"><path d="M0,230c0-38.078,4.22-76.738,9.16-108.952,6.975-45.483,15.387-78.115,15.387-78.115S56.686,0,182.568,0s161.09,39.867,161.09,39.867S359,127.974,359,148.733c-95.131,5.245-134.1,61.526-133.474,65.934,4.447,31.143,4.878,45.646,6.136,72.066s-9.205,52.134-9.205,52.134S188,297.231,142.679,331.2,81.312,460,81.312,460,0,321.843,0,230Zm56.765-30.667s16.864,40.027,47.56,42.934,39.889-27.6,39.889-27.6-14.2-31.232-49.094-32.2S56.765,199.333,56.765,199.333Z"/></svg>';
+		else if( $icon == 'more-horizontal' ) $html = '<svg class="'. $class .' content-mask-svg svg-more-horizontal" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>';
 		else $html = '<svg class="content-mask-svg svg-question svg-missing" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12" y2="17"></line></svg>';
 
 		if( $echo === true ){
@@ -471,6 +497,35 @@ class ContentMask {
 		} else {
 			$this->json_response( 400, 'Remote Content Mask URL for '. get_the_title( $postID ) .' could not be reached.' );
 		}
+	}
+
+	/**
+	 * Refresh a Cached Content Mask
+	 *
+	 * @return void
+	 */
+	public function delete_content_mask(){
+		$this->require_POST();
+		extract( $_POST );
+
+		$errors = false;
+
+		if( delete_post_meta( $postID, 'content_mask_url' ) ){
+			if( delete_post_meta( $postID, 'content_mask_enable' ) ){
+				if( delete_post_meta( $postID, 'content_mask_method' ) ){
+					$this->json_response( 200, 'Content Mask Successfully Removed' );
+				} else {
+					$errors = true;
+				}
+			} else {
+				$errors = true;
+			}
+		} else {
+			$errors = true;
+		}
+
+		if( $errors === true )
+			$this->json_response( 403, 'Error Removing Content Mask' );
 	}
 
 	/**

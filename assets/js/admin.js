@@ -11,14 +11,13 @@ jQuery(document).ready(function($){
 		$('.toplevel_page_content-mask #wpbody .wrap > h2').after('<div class="content-mask-message notice notice-'+ classes +'"><p>'+ message +'</p></div>');
 	}
 
-	$('#content-mask-list td.cache-expires').on( 'click', 'a', function(){
+	$('#content-mask-pages').on( 'click', '.refresh-transient', function(){
 		$('.content-mask-message').remove();
 
 		var	$clicked   = $(this),
-			maskURL    = $clicked.closest('tr').find('td.mask-url a').attr('href'),
+			maskURL    = $clicked.closest('tr').find('.info .meta a').text(),
 			transient  = $clicked.attr('data-transient'),
 			postID     = $clicked.closest('tr').attr('data-attr-id'),
-			cacheFor   = $clicked.closest('tr').find('td.mask-url a').text(),
 			expiration = $clicked.attr('data-expiration'),
 			$methodDiv = $clicked.closest('tr').find('td.method div'),
 			expirationReadable = $clicked.attr('data-expiration-readable');
@@ -38,8 +37,8 @@ jQuery(document).ready(function($){
 			var classes;
 
 			if( response.status == 200 ){
-				$('.content-mask-table-body tr td.cache-expires').each(function(){
-					if( $(this).closest('tr').find('td.mask-url a').text() == cacheFor ){
+				$('#content-mask-pages tr td.status').each(function(){
+					if( $(this).closest('tr').find('.info .meta a').text() == maskURL ){
 						$(this).find('.transient-expiration').text( expirationReadable );
 					}
 				});
@@ -55,16 +54,52 @@ jQuery(document).ready(function($){
 		return false;
 	});
 
-	$('#content-mask-list .content-mask-table-body, #the-list .column-content-mask').on( 'click', '.method svg, .content-mask-method svg', function(){
+	$('#content-mask-pages').on( 'click', '.remove-mask', function(){
+		if( confirm( 'Are you sure you want to remove the Content Mask from '+ $(this).closest('tr').find('.info strong').text() +'?' ) ){
+			$('.content-mask-message').remove();
+
+			var	$clicked   = $(this),
+				$row       = $(this).closest('tr');
+				postID     = $clicked.closest('tr').attr('data-attr-id');
+
+			var data = {
+				'action': 'delete_content_mask',
+				'postID': postID
+			};
+
+			$row.addClass('deleting');
+
+			$.post(ajaxurl, data, function(response) {
+				$('.content-mask-message').remove(); // Prevent weird interaction with existing messages
+				var classes;
+
+				if( response.status == 200 ){
+					$row.fadeOut();
+					classes = 'info';
+				} else if( response.status == 400 || response.status == 403 ){
+					$row.addClass('deleting');
+					classes = 'error';
+				}
+				
+				contentMaskMessage( classes, response.message );
+			}, 'json');
+
+			return false;
+		}
+	});
+
+	$('#content-mask-pages, #the-list .column-content-mask').on( 'click', '.method div, .content-mask-method svg', function(){
 		var	$clicked     = $(this),
 			restoreIcon  = $clicked.attr('class'),
 			stateController,
 			postID;
 
 		if( $clicked.closest('td').hasClass('method') ){
+			// Content Mask Admin
 			postID = $clicked.closest('tr').attr('data-attr-id');
 			stateController = $clicked.closest('tr');
 		} else {
+			// Post/Page Edit List
 			postID = $clicked.closest('tr').attr('id').replace('post-', '');
 			stateController = $clicked.closest('.content-mask-method');
 		}
@@ -72,7 +107,7 @@ jQuery(document).ready(function($){
 		var currentState = stateController.attr('data-attr-state');
 		var newState     = currentState == 'enabled' ? 'disabled' : 'enabled';
 
-		$clicked.closest('div').attr('class', 'content-mask-reloading');
+		$clicked.attr('class', 'content-mask-reloading');
 
 		var data = {
 			'action': 'toggle_content_mask',
