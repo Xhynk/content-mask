@@ -51,7 +51,6 @@ In the Content Mask admin panel, you can enable tracking for Content Masked page
 [![Creating a Content Masked Page](https://img.youtube.com/vi/_H7IWFwmVfo/0.jpg)](https://www.youtube.com/watch?v=_H7IWFwmVfo?rel=0)
 
 ## Notes
->>>>>>> 7b0bc7a924bb17c99f4833d3ae3a5bd70260ba3e
  - Please confirm you're allowed to utilize and embed the content before embedding any particular URL, don't Content Mask any content you don't have license to share or use.
  
  - Content embedded using the Download method is cached using the [WordPress Transients API](https://codex.wordpress.org/Transients_API) for 4 hours by default. If the content on the external URL is updated and you would like a fresh copy, you may just click the "Update" button on the Page, Post, or Custom Post Type to refresh the transient, or click the "Refresh" link in the Content Mask Admin panel. You may also change the cache expiration timer per page anywhere from "Never" to "4 weeks".
