@@ -1,10 +1,10 @@
 @keyframes content_mask_reload {
 	0% {
-		@include vendor-prefix( transform, translateY(-50%) rotate(0deg) )
+		@include vendor-prefix( transform, rotate(0deg) )
 	}
 
 	100% {
-		@include vendor-prefix( transform, translateY(-50%) rotate(360deg) );
+		@include vendor-prefix( transform, rotate(360deg) );
 	}
 }
 
