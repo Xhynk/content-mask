@@ -1,5 +1,8 @@
 <?php
-	$args = [
+	// Define Query Args for Pages/Posts/CPTs with Content Masks defined
+	$load = 20;
+
+	$args = array(
 		'post_status' => ['publish', 'draft', 'pending', 'private'],
 		'post_type'   => get_post_types( '', 'names' ),
 		'meta_query'  => [[
@@ -7,22 +10,29 @@
 			'value'   	=> '',
 			'compare' 	=> '!=',
 		]],
-		'posts_per_page' => 20
-	];
+		'posts_per_page' => $load
+	);
 
-	if( ! current_user_can( 'edit_others_posts' ) ) $args['perm'] = 'editable';
+	// Force only own posts if applicable
+	if( ! current_user_can( 'edit_others_posts' ) )
+		$args['perm'] = 'editable';
 
+	// Initialize Query
 	$query = new WP_Query( $args );
 
-	$columns = [
+	// Define Table Columns
+	$columns = array(
 		'Method',
-		'Title',
-		'Mask URL',
-		'Cache Expires',
-		'Post Type',
+		'Status',
+		'Info',
+		'Type',
 		'Views',
-	];
+		'Non-User',
+		'Unique',
+		'More'
+	);
 
+	// Define Togglable Options
 	$toggle_options = array(
 		'tracking',
 		'user_agent_header',
@@ -32,6 +42,7 @@
 		'allow_styles_iframe',
 	);
 
+	// Set Parameters based on Boolean Toggle Values
 	foreach( $toggle_options as $option ){
 		if( filter_var( get_option( "content_mask_$option" ), FILTER_VALIDATE_BOOLEAN ) ){
 			${$option.'_checked'} = 'checked="checked"';
@@ -42,65 +53,52 @@
 		}
 	}
 ?>
-<div class="wrap">
-	<h2>Content Mask <span class="alignright"><?php require_once dirname(__FILE__).'/admin-buttons.php'; ?></span></h2>
-	
-	<h3><span>List of Masked Pages <button class="collapse-handle"><?php echo $this->display_svg( 'arrow-down', 'icon' ); ?></button></span></h3>
-	<div class="collapse-container">
-		<div id="content-mask-list" class="content-mask-admin-panel tracking-<?php echo $tracking_enabled; ?>">
-			<div class="content-mask-table-header"></div>
-			<div class="content-mask-table-body">
-				<table cellspacing="0">
-					<thead>
-						<tr>
-							<?php foreach( $columns as $column ){
-								$help = ( $column == 'Views' ) ? '<span class="content-mask-hover-help" data-help="Total Views are views from everyone. Non-User Views are from users that are not currently logged in. Unique Views are how many unique visitors have viewed that page.">?</span>' : '';
-								echo '<th class="'. sanitize_title( $column ) .'"><div>'. $column . $help. '</div></th>';
-							} ?>
-						</tr>
-						<tr class="invisible">
-							<?php foreach( $columns as $column ){
-								echo '<th class="th-'. sanitize_title( $column ) .'">'. $column .'</th>';
-							} ?>
-						</tr>
-					</thead>
-					<tbody>
-						<?php
-							if( $query->have_posts() ){
-								while( $query->have_posts() ){
-									$query->the_post();
-									$post_id     = get_the_ID();
-									$post_fields = $this->get_post_fields( $post_id );
+<div id="content-mask" class="wrap">
+	<h1 class="headline"><?php echo $this->display_svg( 'content-mask' ); ?> <span>Content</span> <strong>Mask</strong> <span id="mobile-nav-toggle"><?php echo $this->display_svg( 'menu' ); ?></span><span id="header-nav" class="alignright"><?php require_once dirname(__FILE__).'/admin-buttons.php'; ?></span></h1>
+	<div class="inner">
+		<nav class="sub-menu">
+			<li><a data-target="content-mask-pages" href="#" class="active"><span>List View</span></a></li>
+			<li><a data-target="content-mask-options" href="#"><span>Options</span></a></li>
+			<li><a data-target="content-mask-advanced" href="#"><span>Advanced</span></a></li>
+		</nav>
+		
+		<!-- List of Content Masked Pages/Posts/CPTs -->
+		<div id="content-mask-pages" class="content-mask-panel active <?php if( $tracking_checked == true ){ echo 'visitor-tracking'; } ?> ">
+			<table>
+				<?php
+					if( $query->have_posts() ){
+						$count = 0;
+						while( $query->have_posts() ){ $count++;
+							$query->the_post();
+							$post_id     = get_the_ID();
+							$post_fields = $this->get_post_fields( $post_id );
 
-									extract( $post_fields );
+							extract( $post_fields );
 
-									$state = filter_var( $content_mask_enable, FILTER_VALIDATE_BOOLEAN ) ? 'enabled' : 'disabled';
+							$state = filter_var( $content_mask_enable, FILTER_VALIDATE_BOOLEAN ) ? 'enabled' : 'disabled';
 
-									echo "<tr data-attr-id='$post_id' data-attr-state='$state' class='$state'>";
-										foreach( $columns as $column ){
-											$column = sanitize_title( $column );
+							echo "<tr data-attr-id='$post_id' data-attr-state='$state' class='$state'>";
+								foreach( $columns as $column ){
+									$column = sanitize_title( $column );
 
-											echo "<td class='$column'>";
-												echo $column == 'post-type' ? '' : '<div>';
-													$this->content_mask_display_column( $column, $post_id, $post_fields );
-												echo $column == 'post-type' ? '' : '</div>';
-											echo '</td>';
-										}
-									echo '</tr>';
+									echo "<td class='$column'>";
+										echo '<div>';
+											$this->content_mask_display_column( $column, $post_id, $post_fields );
+										echo '</div>';
+									echo '</td>';
 								}
-							} else {
-								echo "<tr><td><div>No Content Masks Found</div></td></tr>";
-							}
-						?>
-					</tbody>
-				</table>
-			</div>
+							echo '</tr>';
+						}
+					} else {
+						echo "<tr><td><div>No Content Masks Found</div></td></tr>";
+					}
+				?>
+			</table>
+			<?php if( $count == $load ) echo '<button id="load-more-masks">Load More Content Masks</button>'; ?>
 		</div>
-	</div>
-	
-	<h3><span>Advanced Options <button class="collapse-handle"><?php echo $this->display_svg( 'arrow-down', 'icon' ); ?></button></span></h3>
-	<div class="collapse-container">
-		<div id="content-mask-options" class="content-mask-admin-panel">
+		
+		<!-- Content Mask Options and Settings -->
+		<div id="content-mask-options" class="content-mask-panel">
 			<div class="grid" columns="4">
 				<?php
 					$check_options = array(
@@ -133,60 +131,60 @@
 					<?php }
 				?>
 			</div>
-			<div id="content-mask-code">
-				<div class="content-mask-admin-panel">
-					<?php
-						$method_types = array( 'download', 'iframe' );
+		</div>
 
-						$code_types = array(
-							array(
-								'name'   => 'scripts',
-								'editor' => 'text/html',
-								'mode'   => 'htmlmixed',
-								'notes'  => '(Include <pre style="display:inline;">&lt;script&gt;</pre> tags)',
-							),
-							array(
-								'name'   => 'styles',
-								'editor' => 'text/css',
-								'mode'   => 'css',
-								'notes'  => '(Do NOT include <pre style="display:inline;">&lt;style&gt;</pre> tags)',
-							)
-						);
+		<!-- Content Masked Advanced Features and Scripts -->
+		<div id="content-mask-advanced" class="content-mask-panel">
+			<?php
+				$method_types = array( 'download', 'iframe' );
 
-						$count = 0;
+				$code_types = array(
+					array(
+						'name'   => 'scripts',
+						'editor' => 'text/html',
+						'mode'   => 'htmlmixed',
+						'notes'  => '(Include <pre style="display:inline;">&lt;script&gt;</pre> tags)',
+					),
+					array(
+						'name'   => 'styles',
+						'editor' => 'text/css',
+						'mode'   => 'css',
+						'notes'  => '(Do NOT include <pre style="display:inline;">&lt;style&gt;</pre> tags)',
+					)
+				);
 
-						foreach( $method_types as $method ){
-							foreach( $code_types as $type ){
-								$type = (object) $type; $count++;
+				$count = 0;
 
-								if( $count % 2 != 0 ) echo '<div class="grid" columns="2">'; ?>
-									<div class="content-mask-option">
-										<div class="code-edit-wrapper">
-											<label class="content-mask-textarea" for="content_mask_custom_<?php echo $type->name.'_'.$method; ?>">
-												<strong class="display-name">Custom <?php echo ucwords( $type->name ); ?> (<?php echo ucwords( $method ); ?> Method)</strong> <span><?php echo $type->notes; ?></span><br>
-												<textarea id="content_mask_custom_<?php echo $type->name.'_'.$method; ?>" rows="4" data-type="<?php echo $type->editor; ?>" data-mode="<?php echo $type->mode; ?>" name="content_mask_custom_<?php echo $type->name.'_'.$method; ?>" class="widefat textarea code-editor"><?php echo wp_unslash( esc_textarea( get_option( 'content_mask_custom_'.$type->name.'_'.$method ) ) ); ?></textarea>
-												<button id="save-scripts" data-target="content_mask_custom_<?php echo $type->name.'_'.$method; ?>" data-editor="editor_<?php echo $count; ?>" class="wp-core-ui button button-primary">Save <?php echo ucwords( $method ).' '. ucwords( $type->name ); ?></button>
-											</label>
-										</div>
-										<div>
-											<label class="content-mask-checkbox" for="content_mask_allow_<?php echo $type->name.'_'.$method; ?>" data-attr="<?php echo ${'allow_'.$type->name.'_'.$method.'_enabled'}; ?>">
-												<span class="display-name" aria-label="Custom <?php echo ucwords( $type->name ); ?> for <?php echo ucwords( $method ); ?> Method"></span>
-												<input type="checkbox" name="content_mask_allow_<?php echo $type->name.'_'.$method; ?>" id="content_mask_allow_<?php echo $type->name.'_'.$method; ?>" <?php echo ${'allow_'.$type->name.'_'.$method.'_checked'}; ?> />
-												<span class="content-mask-check">
-													<span class="content-mask-check_ajax">
-														<?php echo $this->display_svg( 'checkmark', 'icon' ); ?>
-													</span>
-												</span>
-											</label>
-											<span class="content-mask-option_label">Custom <?php echo ucwords( $type->name ); ?> for <?php echo ucwords( $method ); ?> Method: <strong class="content-mask-value"><?php echo ucwords( ${'allow_'.$type->name.'_'.$method.'_enabled'} ); ?></strong> <span class="content-mask-hover-help" data-help="Add custom <?php echo $type->name; ?> to pages masked with the <?php echo ucwords( $method ); ?> method. Useful if you would like to add Analytics. Note: These <?php echo ucwords( $type->name ); ?> will apply to all pages masked with the <?php echo ucwords( $method ); ?> method.">?</span></span>
-										</div>
-									</div>
-								<?php if( $count % 2 == 0 ) echo '</div>';
-							}
-						}
-					?>
-				</div>
-			</div>
+				foreach( $method_types as $method ){
+					foreach( $code_types as $type ){
+						$type = (object) $type; $count++;
+
+						if( $count % 2 != 0 ) echo '<div class="grid" columns="2" gap>'; ?>
+							<div class="option">
+								<div class="code-edit-wrapper">
+									<label class="content-mask-textarea" for="content_mask_custom_<?php echo $type->name.'_'.$method; ?>">
+										<strong class="display-name">Custom <?php echo ucwords( $type->name ); ?> (<?php echo ucwords( $method ); ?> Method)</strong> <span><?php echo $type->notes; ?></span><br>
+										<textarea id="content_mask_custom_<?php echo $type->name.'_'.$method; ?>" rows="4" data-type="<?php echo $type->editor; ?>" data-mode="<?php echo $type->mode; ?>" name="content_mask_custom_<?php echo $type->name.'_'.$method; ?>" class="widefat textarea code-editor"><?php echo wp_unslash( esc_textarea( get_option( 'content_mask_custom_'.$type->name.'_'.$method ) ) ); ?></textarea>
+										<button id="save-scripts" data-target="content_mask_custom_<?php echo $type->name.'_'.$method; ?>" data-editor="editor_<?php echo $count; ?>" class="wp-core-ui button button-primary">Save <span style="display: none;"><?php echo ucwords( $method ).' '. ucwords( $type->name ); ?></span></button>
+									</label>
+								</div>
+								<div class="content-mask-option">
+									<label class="content-mask-checkbox" for="content_mask_allow_<?php echo $type->name.'_'.$method; ?>" data-attr="<?php echo ${'allow_'.$type->name.'_'.$method.'_enabled'}; ?>">
+										<span class="display-name" aria-label="Custom <?php echo ucwords( $type->name ); ?> for <?php echo ucwords( $method ); ?> Method"></span>
+										<input type="checkbox" name="content_mask_allow_<?php echo $type->name.'_'.$method; ?>" id="content_mask_allow_<?php echo $type->name.'_'.$method; ?>" <?php echo ${'allow_'.$type->name.'_'.$method.'_checked'}; ?> />
+										<span class="content-mask-check">
+											<span class="content-mask-check_ajax">
+												<?php echo $this->display_svg( 'checkmark', 'icon' ); ?>
+											</span>
+										</span>
+									</label>
+									<span class="content-mask-option_label">Custom <?php echo ucwords( $type->name ); ?> for <?php echo ucwords( $method ); ?> Method: <strong class="content-mask-value"><?php echo ucwords( ${'allow_'.$type->name.'_'.$method.'_enabled'} ); ?></strong> <span class="content-mask-hover-help" data-help="Add custom <?php echo $type->name; ?> to pages masked with the <?php echo ucwords( $method ); ?> method. Useful if you would like to add Analytics. Note: These <?php echo ucwords( $type->name ); ?> will apply to all pages masked with the <?php echo ucwords( $method ); ?> method.">?</span></span>
+								</div>
+							</div>
+						<?php if( $count % 2 == 0 ) echo '</div>';
+					}
+				}
+			?>
 		</div>
 	</div>
 </div>

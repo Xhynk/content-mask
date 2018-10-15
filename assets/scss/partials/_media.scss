@@ -35,6 +35,91 @@
 	}
 }
 
+@media (max-width: 1024px){
+	body.content-mask-admin #header-nav {
+		display: none;
+		position: absolute;
+		top: 54px;
+		right: 0px;
+		background: #0095ee;
+		width: auto;
+		max-width: 200px;
+		z-index: 99999;
+	}
+
+	body.content-mask-admin #header-nav .button {
+		display: block;
+		width: 100%;
+		padding: 10px 10px 10px 28px;
+		height: auto;
+	}
+
+	body.content-mask-admin #mobile-nav-toggle {
+		display: inline-block;
+		float: right;
+	}
+
+	// Make Table Mobile Friendly-ish
+	.content-mask-panel tr {
+		display: block;
+		border-bottom: 1px solid #ccc;
+    	margin-bottom: 12px;
+	}
+
+	.content-mask-panel td {
+		display: inline-block;
+		box-sizing: border-box;
+	}
+
+	.content-mask-panel td.method {
+		width: 86px;
+		height: 86px;
+		float: left;
+	}
+
+	.content-mask-panel td.status {
+		width: auto;
+		height: 86px;
+		float: left;
+	}
+
+	.content-mask-panel td.info {
+		width: 100%;
+		display: block;
+		clear: both;
+	}
+
+	.content-mask-panel td.type {
+		width: auto;
+		float: left;
+	}
+
+	.content-mask-panel td.more {
+		display: block;
+		width: 100%;
+	}
+
+	.content-mask-panel td.more:after {
+		content: "";
+		display: block;
+		clear: both;
+	}
+
+	.content-mask-panel .more > div {
+		float: right;
+	}
+}
+
+@media (max-width: 600px){
+	body.content-mask-admin #header-nav {
+		top: 100px;
+	}
+
+	body.content-mask-admin .inner {
+		padding: 10px 20px;
+	}
+}
+
 @media (max-width: 520px){
 	.content-mask-expiration-div {
 		text-align: left;

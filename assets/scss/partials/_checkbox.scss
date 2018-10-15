@@ -16,17 +16,17 @@
 	border: 2px solid #fff;
 }
 
-#content-mask-options .content-mask-check {
+.content-mask-panel .content-mask-check {
 	margin-right: 12px;
 	transform: scale(1);
 	border: 2px solid #eee;
 }
 
-#content-mask-options .content-mask-checkbox[data-attr="enabled"] .content-mask-check {
+.content-mask-checkbox[data-attr="enabled"] .content-mask-check {
 	border-color: #fff;
 }
 
-#content-mask-options .content-mask-option .content-mask-value {
+.content-mask-option .content-mask-value {
 	text-transform: capitalize;
 }
 
@@ -42,14 +42,14 @@
 	height: 66.66%;
 }
 
-#content-mask-settings .content-mask-checkbox input:checked + .content-mask-check,
-#content-mask-options .content-mask-option .content-mask-checkbox[data-attr="enabled"] input + .content-mask-check {
-	animation: content_mask_check .5s cubic-bezier(0.895, 0.030, 0.685, 0.220) forwards;
+.content-mask-checkbox input:checked + .content-mask-check,
+.content-mask-option .content-mask-checkbox[data-attr="enabled"] input + .content-mask-check {
+	//animation: content_mask_check .5s cubic-bezier(0.895, 0.030, 0.685, 0.220) forwards;
 	background: $enabled;
 }
 
-#content-mask-settings .content-mask-checkbox input:checked + .content-mask-check .icon,
-#content-mask-options .content-mask-option .content-mask-checkbox[data-attr="enabled"] input + .content-mask-check .icon {
+.content-mask-checkbox input:checked + .content-mask-check .icon,
+.content-mask-option .content-mask-checkbox[data-attr="enabled"] input + .content-mask-check .icon {
 	opacity: 1;
 	transform: translate3d( -50%, -50%, 0 ) scale(1);
 	stroke: #fff;
