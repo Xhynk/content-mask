@@ -70,7 +70,7 @@ In the Content Mask admin panel, you can enable tracking for Content Masked page
 1. #### Can I send custom headers with the Download Method?
 	*No*. If this is a feature you would like implemented, please contact me.
 
-2. #### Can You Show the Header/Footer on Content Masked Pages? 
+2. #### Can You Show the Header/Footer on Content Masked Pages?
 	*No*. This is because of how page requests are processed. Using Content Mask will override the _entire_ page content on the front end.
 
 3. #### Can I Embed Multiple URLs on One Page?
