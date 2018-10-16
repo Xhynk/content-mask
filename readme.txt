@@ -131,6 +131,7 @@ If your website is secured (with https://), make sure any links on the iframed p
 * Completely Overhauled the Content Mask Admin Panel
 * Admin Panel now has a brand new, more user friendly design
 * Admin Panel is now mobile friendly
+
 = 1.6.0.2 =
 * Added Action Hooks `content_mask_iframe_header` and `content_mask_iframe_footer` to allow more dynamic control of the iframe method
 
