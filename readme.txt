@@ -4,8 +4,7 @@ Donate Link: https://www.paypal.me/xhynk/
 Tags: Embed, Domain Mask, Mask, Redirect, Link
 Requires at Least: 4.1
 Tested Up To: 4.9.8
-Stable tag: 1.7
-Requires PHP: 5.4
+Stable tag: 1.7Requires PHP: 5.4
 Author URI: https://xhynk.com/
 Plugin URL: https://xhynk.com/content-mask/
 License: GPLv2 or later
@@ -132,10 +131,6 @@ If your website is secured (with https://), make sure any links on the iframed p
 * Completely Overhauled the Content Mask Admin Panel
 * Admin Panel now has a brand new, more user friendly design
 * Admin Panel is now mobile friendly
-
-= 1.6.0.3 =
-* Moving plugin from SVN to GitHub for primary development
-
 = 1.6.0.2 =
 * Added Action Hooks `content_mask_iframe_header` and `content_mask_iframe_footer` to allow more dynamic control of the iframe method
 
