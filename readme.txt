@@ -4,7 +4,8 @@ Donate Link: https://www.paypal.me/xhynk/
 Tags: Embed, Domain Mask, Mask, Redirect, Link
 Requires at Least: 4.1
 Tested Up To: 4.9.8
-Stable tag: 1.7Requires PHP: 5.4
+Stable tag: 1.7
+Requires PHP: 5.4
 Author URI: https://xhynk.com/
 Plugin URL: https://xhynk.com/content-mask/
 License: GPLv2 or later
