@@ -3,7 +3,7 @@
 	* Plugin Name:	Content Mask
 	* Plugin URI:	http://xhynk.com/content-mask/
 	* Description:	Easily embed external content into your website without complicated Domain Forwarders, Domain Masks, APIs or Scripts
-	* Version:		1.7
+	* Version:		1.7.0.1
 	* Author:		Alex Demchak
 	* Author URI:	http://xhynk.com/
 
@@ -324,14 +324,18 @@ class ContentMask {
 				break;
 
 			case 'more':
+				$post_type                = ucwords( str_replace( array( '-', '_' ), ' ', get_post_type() ) );
 				$transient                = 'content_mask-'. strtolower( preg_replace( "/[^a-z0-9]/", '', $content_mask_url ) );
 				$data_expiration          = $content_mask_transient_expiration ? $this->time_to_seconds( $this->issetor( $content_mask_transient_expiration ) ) : $this->time_to_seconds( '4 hour' );
 				$data_expiration_readable = $content_mask_transient_expiration ? $content_mask_transient_expiration : '4 hour'; ?>
 				<div class="more-container">
 					<?php echo $this->display_svg( 'more-horizontal', 'icon', "title='More Options'" ); ?>
 					<ul class="more-nav">
-						<li><a href="<?php echo get_edit_post_link( $post_id ); ?>"><?php echo $this->display_svg( 'edit', 'icon', "title='Edit Content Mask'" ); ?> <span>Edit <?php echo ucwords( str_replace( array( '-', '_' ), ' ', get_post_type() ) ); ?></span></a></li>
+						<li><a href="<?php echo get_permalink( $post_id ); ?>" target="_blank"><?php echo $this->display_svg( 'redirect', 'icon', "title='View $post_type'" ); ?> <span>View <?php echo $post_type; ?></span></a></li>
+						<li><a href="<?php echo get_edit_post_link( $post_id ); ?>"><?php echo $this->display_svg( 'edit', 'icon', "title='Edit Content Mask'" ); ?> <span>Edit <?php echo $post_type; ?></span></a></li>
 						<?php if( $content_mask_method === 'download' ) { ?><li><a href="#" class="refresh-transient" data-expiration-readable="<?php echo strtolower( $data_expiration_readable ); ?>s" data-expiration="<?php echo $data_expiration; ?>" data-transient="<?php echo $transient; ?>"><?php echo $this->display_svg( 'refresh', 'icon', "title='Edit Content Mask'" ); ?> <span>Refresh Transient</span></a></li><?php } ?>
+						<li><a href="<?php echo $content_mask_url ?>" target="_blank"><?php echo $this->display_svg( 'bookmark', 'icon', "title='View Source'" ); ?> <span>View Source</span></a></li>
+						<hr>
 						<li><a href="#" class="remove-mask"><?php echo $this->display_svg( 'trash', 'icon', "title='Delete Mask'" ); ?> <span>Remove Mask</span></a></li>
 					</ul>
 				</div>
@@ -749,10 +753,12 @@ class ContentMask {
 			$versions_array = json_decode( $versions_json, true );
 
 			if( $browser == 'Mozilla Firefox' ){
-				$version    = array_shift( $versions_array['client']['Mozilla Firefox'] );
+				$client     = array_shift( $versions_array['client']['Mozilla Firefox'] );
+				$version    = $client['version']; 
 				$user_agent = "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/$version";
 			} else {
-				$version    = array_shift( $versions_array['client']['Google Chrome'] );
+				$client     = array_shift( $versions_array['client']['Google Chrome'] );
+				$version    = $client['version']; 
 				$user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$version Safari/537.36";
 			}
 
