@@ -99,38 +99,36 @@
 		
 		<!-- Content Mask Options and Settings -->
 		<div id="content-mask-options" class="content-mask-panel">
-			<div class="grid" columns="4">
-				<?php
-					$check_options = array(
-						array(
-							'name'  => 'tracking',
-							'label' => 'Visitor Tracking',
-							'help'  => 'Vistor Tracking will give you a rough estimate of how many views your Content Masked Pages are getting.'
-						),
-						array(
-							'name'  => 'user_agent_header',
-							'label' => 'HTTP Headers',
-							'help'  => 'If you\'re getting errors, especially \'403 Forbidden\' errors, when using the Download Method, try enabling this option.'
-						),
-					);
+			<?php
+				$check_options = array(
+					array(
+						'name'  => 'tracking',
+						'label' => 'Visitor Tracking',
+						'help'  => 'Vistor Tracking will give you a rough estimate of how many views your Content Masked Pages are getting.'
+					),
+					array(
+						'name'  => 'user_agent_header',
+						'label' => 'HTTP Headers',
+						'help'  => 'If you\'re getting errors, especially \'403 Forbidden\' errors, when using the Download Method, try enabling this option.'
+					),
+				);
 
-					foreach( $check_options as $option ){
-						$option = (object) $option; ?>
-						<div class="content-mask-option">
-							<label class="content-mask-checkbox" for="content_mask_<?php echo $option->name; ?>" data-attr="<?php echo ${$option->name.'_enabled'}; ?>">
-								<span class="display-name" aria-label="Enable <?php echo $option->label; ?>"></span>
-								<input type="checkbox" name="content_mask_<?php echo $option->name; ?>" id="content_mask_<?php echo $option->name; ?>" <?php echo ${$option->name.'_checked'}; ?> />
-								<span class="content-mask-check">
-									<span class="content-mask-check_ajax">
-										<?php echo $this->display_svg( 'checkmark', 'icon' ); ?>
-									</span>
+				foreach( $check_options as $option ){
+					$option = (object) $option; ?>
+					<div class="content-mask-option">
+						<label class="content-mask-checkbox" for="content_mask_<?php echo $option->name; ?>" data-attr="<?php echo ${$option->name.'_enabled'}; ?>">
+							<span class="display-name" aria-label="Enable <?php echo $option->label; ?>"></span>
+							<input type="checkbox" name="content_mask_<?php echo $option->name; ?>" id="content_mask_<?php echo $option->name; ?>" <?php echo ${$option->name.'_checked'}; ?> />
+							<span class="content-mask-check">
+								<span class="content-mask-check_ajax">
+									<?php echo $this->display_svg( 'checkmark', 'icon' ); ?>
 								</span>
-							</label>
-							<span class="content-mask-option_label"><?php echo $option->label; ?>: <strong class="content-mask-value"><?php echo ucwords( ${$option->name.'_enabled'} ); ?></strong> <span class="content-mask-hover-help" data-help="<?php echo $option->help; ?>">?</span></span>
-						</div>
-					<?php }
-				?>
-			</div>
+							</span>
+						</label>
+						<span class="content-mask-option_label"><?php echo $option->label; ?>: <strong class="content-mask-value"><?php echo ucwords( ${$option->name.'_enabled'} ); ?></strong> <span class="content-mask-hover-help" data-help="<?php echo $option->help; ?>">?</span></span>
+					</div><br>
+				<?php }
+			?>
 		</div>
 
 		<!-- Content Masked Advanced Features and Scripts -->
