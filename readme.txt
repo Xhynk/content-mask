@@ -128,6 +128,10 @@ If your website is secured (with https://), make sure any links on the iframed p
 4. The same WordPress page with Content Mask enabled and set to https://example.com/. You can see the URL has remained the same but the content has been entirely replaced (on the front end only) by the content from https://example.com/
 
 == Changelog ==
+= 1.7.0.1 =
+* Updated HTTP Header Version Checker
+* Added Viewing options to Admin Table Navigation
+
 = 1.7 =
 * Completely Overhauled the Content Mask Admin Panel
 * Admin Panel now has a brand new, more user friendly design
