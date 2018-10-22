@@ -36,7 +36,7 @@
 }
 
 @media (max-width: 1024px){
-	body.toplevel_page_content-mask #header-nav {
+	body.content-mask-admin #header-nav {
 		display: none;
 		position: absolute;
 		top: 54px;
@@ -47,14 +47,14 @@
 		z-index: 99999;
 	}
 
-	body.toplevel_page_content-mask #header-nav .button {
+	body.content-mask-admin #header-nav .button {
 		display: block;
 		width: 100%;
 		padding: 10px 10px 10px 28px;
 		height: auto;
 	}
 
-	body.toplevel_page_content-mask #mobile-nav-toggle {
+	body.content-mask-admin #mobile-nav-toggle {
 		display: inline-block;
 		float: right;
 	}
@@ -111,11 +111,11 @@
 }
 
 @media (max-width: 600px){
-	body.toplevel_page_content-mask #header-nav {
+	body.content-mask-admin #header-nav {
 		top: 100px;
 	}
 
-	body.toplevel_page_content-mask .inner {
+	body.content-mask-admin .inner {
 		padding: 10px 20px;
 	}
 }
