@@ -295,6 +295,13 @@ body.content-mask-admin h1 svg {
   fill: #fff; }
 body.content-mask-admin h1 span {
   font-weight: 600; }
+body.content-mask-admin h1 span.version-number {
+  font-size: 12px;
+  line-height: 0;
+  text-transform: none;
+  font-weight: 100;
+  opacity: .65;
+  font-family: monospace; }
 body.content-mask-admin h1 strong {
   font-weight: 900; }
 body.content-mask-admin h1 .button {
