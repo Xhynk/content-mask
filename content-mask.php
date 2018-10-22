@@ -104,6 +104,13 @@ class ContentMask {
 	}
 
 	/**
+	 * Get This Plugin's Information
+	 */
+	function get_content_mask_data(){
+		return get_plugin_data( __FILE__, false, false );
+	}
+
+	/**
 	 * Prevent undefined index errors by defining a variable with a default
 	 *
 	 * @param variable $var - The variable to check or define.

@@ -54,7 +54,7 @@
 	}
 ?>
 <div id="content-mask" class="wrap">
-	<h1 class="headline"><?php echo $this->display_svg( 'content-mask' ); ?> <span>Content</span> <strong>Mask</strong> <span id="mobile-nav-toggle"><?php echo $this->display_svg( 'menu' ); ?></span><span id="header-nav" class="alignright"><?php require_once dirname(__FILE__).'/admin-buttons.php'; ?></span></h1>
+	<h1 class="headline"><?php echo $this->display_svg( 'content-mask' ); ?> <span>Content</span> <strong>Mask</strong> <span class="version-number">v<?php echo $this->get_content_mask_data()['Version']; ?></span> <span id="mobile-nav-toggle"><?php echo $this->display_svg( 'menu' ); ?></span><span id="header-nav" class="alignright"><?php require_once dirname(__FILE__).'/admin-buttons.php'; ?></span></h1>
 	<div class="inner">
 		<nav class="sub-menu">
 			<li><a data-target="content-mask-pages" href="#" class="active"><span>List View</span></a></li>
