@@ -12,8 +12,8 @@ body.toplevel_page_content-mask {
 	background: #f7f7fa;
 }
 
-// Limit to just internal styles
-body.content-mask-admin {
+// Limit to just internal styles (remove custom class)
+body.toplevel_page_content-mask {
 	// Header Styles
 	h1.headline {
 		padding: 12px;
