@@ -3,7 +3,7 @@
 	* Plugin Name:	Content Mask
 	* Plugin URI:	http://xhynk.com/content-mask/
 	* Description:	Easily embed external content into your website without complicated Domain Forwarders, Domain Masks, APIs or Scripts
-	* Version:		1.7.0.2
+	* Version:		1.7.0.3
 	* Author:		Alex Demchak
 	* Author URI:	http://xhynk.com/
 	*
@@ -79,7 +79,7 @@ class ContentMask {
 		foreach( self::$AJAX_ACTIONS as $action )
 			add_action( "wp_ajax_$action", [$this, $action] );
 
-		add_filter( 'admin_body_class', [$this, 'add_admin_body_classes'] );
+		add_filter( 'admin_body_class', [$this, 'add_admin_body_classes'], 27 );
 		add_filter( 'manage_posts_columns', [$this, 'content_mask_column'] );
 		add_filter( 'manage_pages_columns', [$this, 'content_mask_column'] );
 
@@ -187,6 +187,8 @@ class ContentMask {
 		if( $screen->base == 'edit' ){
 			return "$classes content-mask-admin";
 		}
+
+		return $classes;
 	}
 
 	/**
