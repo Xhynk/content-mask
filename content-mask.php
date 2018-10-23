@@ -3,7 +3,7 @@
 	* Plugin Name:	Content Mask
 	* Plugin URI:	http://xhynk.com/content-mask/
 	* Description:	Easily embed external content into your website without complicated Domain Forwarders, Domain Masks, APIs or Scripts
-	* Version:		1.7.0.3
+	* Version:		1.7.0.4
 	* Author:		Alex Demchak
 	* Author URI:	http://xhynk.com/
 	*
@@ -67,7 +67,7 @@ class ContentMask {
 	 */
 	public function __construct(){
 		add_action( 'save_post', [$this, 'save_meta'], 10, 1 );
-		add_action( 'admin_menu', [$this, 'register_admin_page'] );
+		add_action( 'admin_menu', [$this, 'register_admin_menu'] );
 		add_action( 'admin_notices', [$this, 'display_admin_notices'] );
 		add_action( 'add_meta_boxes', [$this, 'add_meta_boxes'], 1, 2 );
 		add_action( 'template_redirect', [$this, 'process_page_request'], 1, 2 );
@@ -203,8 +203,11 @@ class ContentMask {
 	 *
 	 * @return void
 	 */
-	public function register_admin_page(){
-		add_menu_page( 'Content Mask', 'Content Mask', 'edit_posts', 'content-mask', [$this, 'admin_panel'], plugins_url( 'content-mask/assets/img/icon-solid.png' ) );
+	public function register_admin_menu(){
+		// TODO: Make Submenu items highlight on focus
+		add_menu_page( 'Content Mask', 'Content Mask', 'edit_posts', 'content-mask', [$this, 'admin_panel'], '' );
+		add_submenu_page( 'content-mask', 'Content Mask Options', 'Options', 'edit_posts', 'content-mask&tab=options', function(){ return false; } );
+		add_submenu_page( 'content-mask', 'Content Mask Advanced', 'Advanced', 'edit_posts', 'content-mask&tab=advanced', function(){ return false; } );
 	}
 
 	/**
@@ -258,8 +261,10 @@ class ContentMask {
 
 		// Admin Panel Only
 		if( $hook == 'toplevel_page_content-mask' ){
-			wp_enqueue_code_editor( array( 'type' => 'text/html' ) );
-			wp_enqueue_script( 'content-mask-code-editor', "$assets_dir/js/code-editor.min.js", array( 'jquery' ), filemtime( plugin_dir_path( __FILE__ ) . 'assets/js/code-editor.min.js' ), true );
+			if( function_exists('wp_enqueue_code_editor' ) ){
+				wp_enqueue_code_editor( array( 'type' => 'text/html' ) );
+				wp_enqueue_script( 'content-mask-code-editor', "$assets_dir/js/code-editor.min.js", array( 'jquery' ), filemtime( plugin_dir_path( __FILE__ ) . 'assets/js/code-editor.min.js' ), true );
+			}
 		}
 	}
 
@@ -270,9 +275,13 @@ class ContentMask {
 	 * @return void
 	 */
 	public function global_admin_assets(){
+		// TODO: Remove .png sprite and use SVG/Font
 		echo '<style>
-			#adminmenu #toplevel_page_content-mask img { padding: 0; }
-			#adminmenu #toplevel_page_content-mask .current img { opacity: 1; }
+			#adminmenu #toplevel_page_content-mask .wp-menu-image:before { display: none; } /* Hide Gear */
+			#adminmenu #toplevel_page_content-mask .wp-menu-image { background: url( '. plugins_url( 'content-mask/assets/img/icon-sprite.png' ) .' ) left top no-repeat !important; background-size: cover !important;} /* Load Sprite */
+			#adminmenu #toplevel_page_content-mask:hover .wp-menu-image { background-position: left center !important; } /* Hover Blue Icon */
+			#adminmenu #toplevel_page_content-mask.current .wp-menu-image,
+			#adminmenu #toplevel_page_content-mask.wp-has-current-submenu .wp-menu-image { background-position: left bottom !important; } /* Active White Icon */
 		</style>';
 	}
 
@@ -341,10 +350,10 @@ class ContentMask {
 				<div class="more-container">
 					<?php echo $this->display_svg( 'more-horizontal', 'icon', "title='More Options'" ); ?>
 					<ul class="more-nav">
-						<li><a href="<?php echo get_permalink( $post_id ); ?>" target="_blank"><?php echo $this->display_svg( 'redirect', 'icon', "title='View $post_type'" ); ?> <span>View <?php echo $post_type; ?></span></a></li>
+						<li><a href="<?php echo get_permalink( $post_id ); ?>" target="_blank"><?php echo $this->display_svg( $content_mask_method, 'icon', "title='View $post_type'" ); ?> <span>View <?php echo $post_type; ?></span></a></li>
 						<li><a href="<?php echo get_edit_post_link( $post_id ); ?>"><?php echo $this->display_svg( 'edit', 'icon', "title='Edit Content Mask'" ); ?> <span>Edit <?php echo $post_type; ?></span></a></li>
 						<?php if( $content_mask_method === 'download' ) { ?><li><a href="#" class="refresh-transient" data-expiration-readable="<?php echo strtolower( $data_expiration_readable ); ?>s" data-expiration="<?php echo $data_expiration; ?>" data-transient="<?php echo $transient; ?>"><?php echo $this->display_svg( 'refresh', 'icon', "title='Edit Content Mask'" ); ?> <span>Refresh Transient</span></a></li><?php } ?>
-						<li><a href="<?php echo $content_mask_url ?>" target="_blank"><?php echo $this->display_svg( 'bookmark', 'icon', "title='View Source'" ); ?> <span>View Source</span></a></li>
+						<li><a href="<?php echo $content_mask_url ?>" target="_blank"><?php echo $this->display_svg( 'bookmark', 'icon', "title='View Source'" ); ?> <span>View Source URL</span></a></li>
 						<hr>
 						<li><a href="#" class="remove-mask"><?php echo $this->display_svg( 'trash', 'icon', "title='Delete Mask'" ); ?> <span>Remove Mask</span></a></li>
 					</ul>

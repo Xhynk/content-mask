@@ -57,13 +57,13 @@
 	<h1 class="headline"><?php echo $this->display_svg( 'content-mask' ); ?> <span>Content</span> <strong>Mask</strong> <span class="version-number">v<?php echo $this->get_content_mask_data()['Version']; ?></span> <span id="mobile-nav-toggle"><?php echo $this->display_svg( 'menu' ); ?></span><span id="header-nav" class="alignright"><?php require_once dirname(__FILE__).'/admin-buttons.php'; ?></span></h1>
 	<div class="inner">
 		<nav class="sub-menu">
-			<li><a data-target="content-mask-pages" href="#" class="active"><span>List View</span></a></li>
-			<li><a data-target="content-mask-options" href="#"><span>Options</span></a></li>
-			<li><a data-target="content-mask-advanced" href="#"><span>Advanced</span></a></li>
+			<li><a data-target="content-mask-pages" href="#" class="<?php echo ( !isset( $_GET['tab'] ) ) ? 'active' : ''; ?>"><span>List View</span></a></li>
+			<li><a data-target="content-mask-options" href="#" class="<?php echo ( isset( $_GET['tab'] ) && $_GET['tab'] == 'options' ) ? 'active' : ''; ?>"><span>Options</span></a></li>
+			<li><a data-target="content-mask-advanced" href="#" class="<?php echo ( isset( $_GET['tab'] ) && $_GET['tab'] == 'advanced' ) ? 'active' : ''; ?>"><span>Advanced</span></a></li>
 		</nav>
 		
 		<!-- List of Content Masked Pages/Posts/CPTs -->
-		<div id="content-mask-pages" class="content-mask-panel active <?php if( $tracking_checked == true ){ echo 'visitor-tracking'; } ?> ">
+		<div id="content-mask-pages" class="content-mask-panel <?php echo ( !isset( $_GET['tab'] ) ) ? 'active' : ''; ?> <?php if( $tracking_checked == true ){ echo 'visitor-tracking'; } ?> ">
 			<table>
 				<?php
 					if( $query->have_posts() ){
@@ -98,7 +98,7 @@
 		</div>
 		
 		<!-- Content Mask Options and Settings -->
-		<div id="content-mask-options" class="content-mask-panel">
+		<div id="content-mask-options" class="content-mask-panel <?php echo ( isset( $_GET['tab'] ) && $_GET['tab'] == 'options' ) ? 'active' : ''; ?>">
 			<?php
 				$check_options = array(
 					array(
@@ -132,7 +132,7 @@
 		</div>
 
 		<!-- Content Masked Advanced Features and Scripts -->
-		<div id="content-mask-advanced" class="content-mask-panel">
+		<div id="content-mask-advanced" class="content-mask-panel <?php echo ( isset( $_GET['tab'] ) && $_GET['tab'] == 'advanced' ) ? 'active' : ''; ?>">
 			<?php
 				$method_types = array( 'download', 'iframe' );
 

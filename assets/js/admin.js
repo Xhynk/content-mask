@@ -47,7 +47,7 @@ jQuery(document).ready(function($){
     					'<div class="content-mask-modal '+ classes +'">'+
 							'<svg class="icon content-mask-svg svg-trash" title="Delete Mask" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>'+
 							'<h2>'+ title +'</h2>'+
-							'<p>Remove the Content Mask from this?</p>'+
+							'<p>Remove this Content Mask?</p>'+
 							'<button data-intent="confirm" data-action="delete-mask" data-id="'+ postID +'">Yes</button><button data-intent="cancel">No</button>'+
 						'</div>'+
 					'</div>';

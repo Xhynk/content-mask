@@ -142,3 +142,9 @@
 		margin: 0 auto 24px;
 	}
 }
+
+@media (max-width: 419px){
+	body.content-mask-admin h1 span.version-number {
+		display: none;
+	}
+}
