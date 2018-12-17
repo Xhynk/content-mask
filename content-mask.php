@@ -1,28 +1,29 @@
 <?php
 /**
-	* Plugin Name:	Content Mask
-	* Plugin URI:	http://xhynk.com/content-mask/
-	* Description:	Easily embed external content into your website without complicated Domain Forwarders, Domain Masks, APIs or Scripts
-	* Version:		1.7.0.4
-	* Author:		Alex Demchak
-	* Author URI:	http://xhynk.com/
-	*
-	*
-	*	Copyright Alexander Demchak, Third River Marketing LLC
-	*
-	*	This program is free software; you can redistribute it and/or modify
-	*	it under the terms of the GNU General Public License as published by
-	*	the Free Software Foundation; either version 3 of the License, or
-	*	(at your option) any later version.
-	*
-	*	This program is distributed in the hope that it will be useful,
-	*	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	*	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-	*	GNU General Public License for more details.
-	*
-	*	You should have received a copy of the GNU General Public License
-	*	along with this program. If not, see http://www.gnu.org/licenses.
-*/
+ * Plugin Name: Content Mask
+ * Plugin URI:  http://xhynk.com/content-mask/
+ * Description: Easily embed external content into your website without complicated Domain Forwarders, Domain Masks, APIs or Scripts
+ * Version:     1.7.0.5
+ * Author:      Alex Demchak
+ * Author URI:  http://xhynk.com/
+ *
+ * @package ContentMask
+ *
+ * Copyright Alexander Demchak, Third River Marketing LLC
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see http://www.gnu.org/licenses.
+ */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
@@ -54,6 +55,7 @@ class ContentMask {
 		'content_mask_user_agent_header'
 	);
 	public static $AJAX_ACTIONS  = array(
+		//'do_upgrade',
 		'load_more_pages',
 		'refresh_transient',
 		'delete_content_mask',
@@ -61,6 +63,7 @@ class ContentMask {
 		'update_content_mask_option',
 		'toggle_content_mask_option'
 	);
+	public static $DB_VERSION = 2;
 
 	/**
 	 * Class Constructor - Runs Action Hooks
@@ -69,6 +72,7 @@ class ContentMask {
 		add_action( 'save_post', [$this, 'save_meta'], 10, 1 );
 		add_action( 'admin_menu', [$this, 'register_admin_menu'] );
 		add_action( 'admin_notices', [$this, 'display_admin_notices'] );
+		//add_action( 'admin_notices', [$this, 'maybe_upgrade']);
 		add_action( 'add_meta_boxes', [$this, 'add_meta_boxes'], 1, 2 );
 		add_action( 'template_redirect', [$this, 'process_page_request'], 1, 2 );
 		add_action( 'admin_enqueue_scripts', [$this, 'exclusive_admin_assets'] );
@@ -105,9 +109,58 @@ class ContentMask {
 
 	/**
 	 * Get This Plugin's Information
+	 * 
+	 * @return array - Plugin Metadata for Content Mask
 	 */
-	function get_content_mask_data(){
+	public function get_content_mask_data(){
 		return get_plugin_data( __FILE__, false, false );
+	}
+
+	/**
+	 * Maybe Upgrade
+	 */
+	public function maybe_upgrade(){
+		// Don't even attempt unless admin
+		if( current_user_can( 'manage_options' ) ){
+			$do_upgrade = false;
+			$present_upgrade = false;
+			$hide_notice = get_option( 'content_mask_hide_database_upgrade_notice' );
+
+			if( ! $hide_notice ){
+				if( $content_mask_database_version = get_option( 'content_mask_database_version' ) ){
+					// DB Version is Set - Is it High Enough?
+					if( $content_mask_database_version < 2 ){
+						$present_upgrade = true;
+					}
+				} else {
+					// DB Version Not Set (Pre 1.7.0.4), set to 1
+					update_option( 'content_mask_database_version', 1 );
+					$content_mask_database_version = 1;
+					$present_upgrade = true;
+				}
+			}
+
+			// Potentially Show Popup
+			if( $present_upgrade == true ){
+				$this->create_admin_notice( 'Content Mask requires a small Database Upgrade to function efficiently. <a id="content-mask-upgrade" data-current-version="'. $content_mask_database_version .'" data-new-version="2" href="#">Allow Upgrade</a> <a style="float: right;" href="#">Hide This Notice</a>', 'notice-warning', 'Alert', 'content-mask-upgrade-notice' );
+			}
+		}
+	}
+
+	/**
+	 * Do Upgrade
+	 */
+	function do_upgrade(){
+		$content_mask_args = array(
+			'post_status' => 'any',
+			'post_type'   => get_post_types( '', 'names' ),
+			'meta_query'  => [[
+				'key'	  	=> 'content_mask_url',
+				'value'   	=> '',
+				'compare' 	=> '!=',
+			]],
+			'posts_per_page' => 10
+		);
 	}
 
 	/**
@@ -298,7 +351,7 @@ class ContentMask {
 
 		switch( $column ){
 			case 'method':
-				echo $this->display_svg( $content_mask_method, 'icon', "title='$content_mask_method'" );
+				$this->echo_svg( "method-$content_mask_method", 'icon', "title='$content_mask_method'" );
 				break;
 
 			case 'info':
@@ -309,7 +362,7 @@ class ContentMask {
 			case 'status':
 				echo '<span class="label">'. $content_mask_method .'</span>';
 				if( $content_mask_method === 'download' ){
-					$transient = 'content_mask-'. strtolower( preg_replace( "/[^a-z0-9]/", '', $content_mask_url ) );
+					$transient = 'content_mask-'. str_replace( '.', '_', $this->get_content_mask_data()['Version'] ) .'-'. strtolower( preg_replace( "/[^a-z0-9]/", '', $content_mask_url ) );
 
 					$exp = $this->get_transient_expiration( $transient );
 					$classes = ( $exp == 'Expired' ) ? 'expired' : '';
@@ -344,18 +397,18 @@ class ContentMask {
 
 			case 'more':
 				$post_type                = ucwords( str_replace( array( '-', '_' ), ' ', get_post_type() ) );
-				$transient                = 'content_mask-'. strtolower( preg_replace( "/[^a-z0-9]/", '', $content_mask_url ) );
+				$transient                = 'content_mask-'. str_replace( '.', '_', $this->get_content_mask_data()['Version'] ) .'-'. strtolower( preg_replace( "/[^a-z0-9]/", '', $content_mask_url ) );
 				$data_expiration          = $content_mask_transient_expiration ? $this->time_to_seconds( $this->issetor( $content_mask_transient_expiration ) ) : $this->time_to_seconds( '4 hour' );
 				$data_expiration_readable = $content_mask_transient_expiration ? $content_mask_transient_expiration : '4 hour'; ?>
 				<div class="more-container">
-					<?php echo $this->display_svg( 'more-horizontal', 'icon', "title='More Options'" ); ?>
+					<?php $this->echo_svg( 'more-horizontal', 'icon', "title='More Options'" ); ?>
 					<ul class="more-nav">
-						<li><a href="<?php echo get_permalink( $post_id ); ?>" target="_blank"><?php echo $this->display_svg( $content_mask_method, 'icon', "title='View $post_type'" ); ?> <span>View <?php echo $post_type; ?></span></a></li>
-						<li><a href="<?php echo get_edit_post_link( $post_id ); ?>"><?php echo $this->display_svg( 'edit', 'icon', "title='Edit Content Mask'" ); ?> <span>Edit <?php echo $post_type; ?></span></a></li>
-						<?php if( $content_mask_method === 'download' ) { ?><li><a href="#" class="refresh-transient" data-expiration-readable="<?php echo strtolower( $data_expiration_readable ); ?>s" data-expiration="<?php echo $data_expiration; ?>" data-transient="<?php echo $transient; ?>"><?php echo $this->display_svg( 'refresh', 'icon', "title='Edit Content Mask'" ); ?> <span>Refresh Transient</span></a></li><?php } ?>
-						<li><a href="<?php echo $content_mask_url ?>" target="_blank"><?php echo $this->display_svg( 'bookmark', 'icon', "title='View Source'" ); ?> <span>View Source URL</span></a></li>
+						<li><a href="<?php echo get_permalink( $post_id ); ?>" target="_blank"><?php $this->echo_svg( "method-$content_mask_method", 'icon', "title='View $post_type'" ); ?> <span>View <?php echo $post_type; ?></span></a></li>
+						<li><a href="<?php echo get_edit_post_link( $post_id ); ?>"><?php $this->echo_svg( 'edit', 'icon', "title='Edit Content Mask'" ); ?> <span>Edit <?php echo $post_type; ?></span></a></li>
+						<?php if( $content_mask_method === 'download' ) { ?><li><a href="#" class="refresh-transient" data-expiration-readable="<?php echo strtolower( $data_expiration_readable ); ?>s" data-expiration="<?php echo $data_expiration; ?>" data-transient="<?php echo $transient; ?>"><?php $this->echo_svg( 'refresh', 'icon', "title='Edit Content Mask'" ); ?> <span>Refresh Transient</span></a></li><?php } ?>
+						<li><a href="<?php echo $content_mask_url ?>" target="_blank"><?php $this->echo_svg( 'bookmark', 'icon', "title='View Source'" ); ?> <span>View Source URL</span></a></li>
 						<hr>
-						<li><a href="#" class="remove-mask"><?php echo $this->display_svg( 'trash', 'icon', "title='Delete Mask'" ); ?> <span>Remove Mask</span></a></li>
+						<li><a href="#" class="remove-mask"><?php $this->echo_svg( 'trash', 'icon', "title='Delete Mask'" ); ?> <span>Remove Mask</span></a></li>
 					</ul>
 				</div>
 				<?php break;
@@ -363,40 +416,31 @@ class ContentMask {
 	}
 
 	/**
-	 * Display a custom SVG
+	 * Return a custom SVG (Sources Provided in part by feathericons.com)
 	 *
 	 * @param string $icon - The desired icon to display
 	 * @param string $class - A space separated list of classes to add
 	 * @param string $attr - A custom attribute string to display
-	 * @param bool $echo - False to return, True to echo output
 	 * @return string - The final usable SVG HTML
 	 */
-	public function display_svg( $icon = '', $class = '', $attr = '', $echo = false ){
-			 if( $icon == 'box' )             $html = '<svg class="'. $class .' content-mask-svg svg-box" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.89 1.45l8 4A2 2 0 0 1 22 7.24v9.53a2 2 0 0 1-1.11 1.79l-8 4a2 2 0 0 1-1.79 0l-8-4a2 2 0 0 1-1.1-1.8V7.24a2 2 0 0 1 1.11-1.79l8-4a2 2 0 0 1 1.78 0z"></path><polyline points="2.32 6.16 12 11 21.68 6.16"></polyline><line x1="12" y1="22.76" x2="12" y2="11"></line></svg>';
-		else if( $icon == 'edit' )            $html = '<svg class="'. $class .' content-mask-svg svg-edit" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.66V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.34"></path><polygon points="18 2 22 6 12 16 8 16 8 12 18 2"></polygon></svg>';
-		else if( $icon == 'menu' )            $html = '<svg class="'. $class .' content-mask-svg svg-menu" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>';
-		else if( $icon == 'heart' )           $html = '<svg class="'. $class .' content-mask-svg svg-fill svg-heart" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
-		else if( $icon == 'share' )           $html = '<svg class="'. $class .' content-mask-svg svg-share" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>';
-		else if( $icon == 'email' )           $html = '<svg class="'. $class .' content-mask-svg svg-email" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>';
-		else if( $icon == 'trash' )           $html = '<svg class="'. $class .' content-mask-svg svg-trash" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
-		else if( $icon == 'iframe' )          $html = '<svg class="'. $class .' content-mask-svg svg-iframe" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>';
-		else if( $icon == 'refresh' )         $html = '<svg class="'. $class .' content-mask-svg svg-refresh" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>';
-		else if( $icon == 'bookmark' )        $html = '<svg class="'. $class .' content-mask-svg svg-bookmark" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>';
-		else if( $icon == 'download' )        $html = '<svg class="'. $class .' content-mask-svg svg-download" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 17 12 21 16 17"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"></path></svg>';
-		else if( $icon == 'redirect' )        $html = '<svg class="'. $class .' content-mask-svg svg-redirect" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>';
-		else if( $icon == 'arrow-up' )        $html = '<svg class="'. $class .' content-mask-svg svg-arrow-up" '. $attr .' viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>';
-		else if( $icon == 'checkmark' )       $html = '<svg class="'. $class .' content-mask-svg svg-checkmark" '. $attr .' width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
-		else if( $icon == 'arrow-down' )      $html = '<svg class="'. $class .' content-mask-svg svg-arrow-down" '. $attr .' viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
-		else if( $icon == 'help-circle' )     $html = '<svg class="'. $class .' content-mask-svg svg-help-circle" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12" y2="17"></line></svg>';
-		else if( $icon == 'content-mask' )    $html = '<svg class="'. $class .' content-mask-svg svg-content-mask" '. $attr .' viewBox="0 0 359 460"><path d="M0,230c0-38.078,4.22-76.738,9.16-108.952,6.975-45.483,15.387-78.115,15.387-78.115S56.686,0,182.568,0s161.09,39.867,161.09,39.867S359,127.974,359,148.733c-95.131,5.245-134.1,61.526-133.474,65.934,4.447,31.143,4.878,45.646,6.136,72.066s-9.205,52.134-9.205,52.134S188,297.231,142.679,331.2,81.312,460,81.312,460,0,321.843,0,230Zm56.765-30.667s16.864,40.027,47.56,42.934,39.889-27.6,39.889-27.6-14.2-31.232-49.094-32.2S56.765,199.333,56.765,199.333Z"/></svg>';
-		else if( $icon == 'more-horizontal' ) $html = '<svg class="'. $class .' content-mask-svg svg-more-horizontal" '. $attr .' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>';
-		else $html = '<svg class="content-mask-svg svg-question svg-missing" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12" y2="17"></line></svg>';
+	public function get_svg( $icon = '', $class = '', $attr = '', $viewbox = '0 0 24 24' ){
+		// svg-icons.php includes all switch/case for the internal parts of the <svg> tag below
+		include plugin_dir_path(__FILE__).'/inc/svg-icons.php';
 
-		if( $echo === true ){
-			echo $html;
-		} else {
-			return $html;
-		}
+		return "<svg class='$class svg-$icon content-mask-svg' $attr viewBox='$viewbox' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>$svg</svg>";
+	}
+
+	/**
+	 * Echo a custom SVG (Sources Provided in part by feathericons.com)
+	 *
+	 * @uses get_svg();
+	 * @param string $icon - The desired icon to display
+	 * @param string $class - A space separated list of classes to add
+	 * @param string $attr - A custom attribute string to display
+	 * @return string - Echoes the final usable SVG from get_svg();
+	 */
+	public function echo_svg( $icon = '', $class = '', $attr = '', $viewbox = '0 0 24 24' ){
+		echo $this->get_svg( $icon, $class, $attr, $viewbox );
 	}
 
 	/**
@@ -431,8 +475,8 @@ class ContentMask {
 	 * @param string $type - The type of message, e.g. "Warning", "Note", etc.
 	 * @return The full markup for a WordPress admin notice
 	 */
-	public function create_admin_notice( $message = '', $classes = 'notice-info', $type = 'Note' ){ ?>
-		<div class="notice <?php echo $classes; ?>">
+	public function create_admin_notice( $message = '', $classes = 'notice-info', $type = 'Note', $id = false ){ ?>
+		<div <?php if( $id ){ echo "id='$id'"; } ?> class="notice <?php echo $classes; ?>">
 			<p><strong><?php echo $type; ?></strong>: <?php echo $message; ?></p>
 		</div>
 	<?php }
@@ -700,7 +744,7 @@ class ContentMask {
 			// Perhaps a slightly more robust Regex to grab ones like `<img src="img/test.jpg"/>`
 			// https://regex101.com/r/Kjcskm/1
 
-			return preg_replace('~(?:src|action|href)=[\'"]\K(?:/|(?!http))(?!/)[^\'"]*~', "$url/$0", $str);
+			return preg_replace('~(?:src|action|href)=[\'"]\K(?:/|(?!http|tel|mailto))(?!/)[^\'"]*~', "$url/$0", $str);
 		} else {
 			return false;
 		}
@@ -797,7 +841,7 @@ class ContentMask {
 	 * @return string - The full markup of the $url parameter
 	 */
 	public function get_page_content( $url, $expiration = 14400, $user_agent_header = false ){
-		$transient_name = 'content_mask-'. strtolower( preg_replace( "/[^a-z0-9]/", '', $url ) );
+		$transient_name = 'content_mask-'. str_replace( '.', '_', $this->get_content_mask_data()['Version'] ) .'-'. strtolower( preg_replace( "/[^a-z0-9]/", '', $url ) );
 		
 		$body = get_transient( $transient_name );
 
@@ -1022,8 +1066,8 @@ class ContentMask {
 	/**
 	 * The Metabox on edit.php
 	 */
-	public function add_meta_boxes(){
-		add_meta_box( 'content-mask-metabox', "Content Mask Settings", function(){ require_once dirname(__FILE__).'/inc/metabox.php'; }, null, 'normal', 'high' );
+	public function add_meta_boxes( $page ){
+		add_meta_box( 'content-mask-metabox', 'Content Mask Settings', function(){ require_once dirname(__FILE__).'/inc/metabox.php'; }, $page, 'advanced', 'high' );
 	}
 
 	/**
@@ -1141,7 +1185,7 @@ class ContentMask {
 				update_post_meta( $post_id, 'content_mask_enable', $this->sanitize_checkbox( $content_mask_enable ) );
 
 				// Delete the cached 'download' copy any time this Page, Post or Custom Post Type is updated.
-				delete_transient( 'content_mask-'. strtolower( preg_replace( "/[^a-z0-9]/", '', $content_mask_url ) ) );
+				delete_transient( 'content_mask-'. str_replace( '.', '_', $this->get_content_mask_data()['Version'] ) .'-'. strtolower( preg_replace( "/[^a-z0-9]/", '', $content_mask_url ) ) );
 
 				// Set Cache Expiration only if 'download' method is being used.
 				if( $method == 'download' ){
@@ -1186,7 +1230,7 @@ class ContentMask {
 				 */
 				if( $content_mask_url ){
 					echo "<div class='content-mask-method $enabled' data-attr-state='$enabled'><div>";
-						$this->display_svg( $content_mask_method, 'icon', 'title="'. ucwords( $content_mask_method ) .'"', true );
+						$this->get_svg( "method-$content_mask_method", 'icon', 'title="'. ucwords( $content_mask_method ) .'"', true );
 					echo '</div></div>';
 				}
 				
