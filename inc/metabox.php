@@ -6,20 +6,20 @@
 			<span aria-label="Enable Content Mask"></span>
 			<input type="checkbox" name="content_mask_enable" id="content_mask_enable" <?php if( filter_var( $this->issetor( $content_mask_enable ), FILTER_VALIDATE_BOOLEAN ) ){ echo 'checked="checked"'; } ?> />
 			<span class="content-mask-check">
-				<?php echo $this->display_svg( 'checkmark', 'icon' ); ?>
+				<?php $this->echo_svg( 'checkmark', 'icon' ); ?>
 			</span>
 		</label>
 	</div>
 	<div class="content-mask-method-container">
 		<div class="content-mask-select">
 			<input type="radio" name="content_mask_method" class="content-mask-select-toggle">
-			<?php echo $this->display_svg( 'arrow-down', 'toggle' ); ?>
-			<?php echo $this->display_svg( 'arrow-up', 'toggle' ); ?>
+			<?php $this->echo_svg( 'arrow-down', 'toggle' ); ?>
+			<?php $this->echo_svg( 'arrow-up', 'toggle' ); ?>
 			<span class="placeholder">Choose a Method...</span>
 			<?php foreach( ['download', 'iframe', 'redirect'] as $method ){ ?>
 				<label class="option">
 					<input type="radio" <?php echo $this->issetor( $content_mask_method ) == $method ? 'checked="checked"' : '' ?> value="<?php echo $method; ?>" name="content_mask_method">
-					<span class="title"><?php echo $this->display_svg( $method ) . ucwords( $method ); ?></span>
+					<span class="title"><?php $this->echo_svg( $method ) . ucwords( $method ); ?></span>
 				</label>
 			<?php } ?>
 		</div>
@@ -37,8 +37,8 @@
 			<div class="content-mask-select">
 				<?php $test = $this->time_to_seconds( $this->issetor( $content_mask_transient_expiration ) ); ?>
 				<input type="radio" name="content_mask_transient_expiration" class="content-mask-select-toggle">
-				<?php echo $this->display_svg( 'arrow-down', 'toggle' ); ?>
-				<?php echo $this->display_svg( 'arrow-up', 'toggle' ); ?>
+				<?php $this->echo_svg( 'arrow-down', 'toggle' ); ?>
+				<?php $this->echo_svg( 'arrow-up', 'toggle' ); ?>
 				<span class="placeholder">Cache Expiration:</span>
 				<label class="option">
 					<input type="radio" <?php echo $content_mask_transient_expiration == 'never' ? 'checked="checked"' : '' ?> value="never" name="content_mask_transient_expiration">

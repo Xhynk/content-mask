@@ -54,7 +54,7 @@
 	}
 ?>
 <div id="content-mask" class="wrap">
-	<h1 class="headline"><?php echo $this->display_svg( 'content-mask' ); ?> <span>Content</span> <strong>Mask</strong> <span class="version-number">v<?php echo $this->get_content_mask_data()['Version']; ?></span> <span id="mobile-nav-toggle"><?php echo $this->display_svg( 'menu' ); ?></span><span id="header-nav" class="alignright"><?php require_once dirname(__FILE__).'/admin-buttons.php'; ?></span></h1>
+	<h1 class="headline"><?php $this->echo_svg( 'content-mask' ); ?> <span>Content</span> <strong>Mask</strong> <span class="version-number">v<?php echo $this->get_content_mask_data()['Version']; ?></span> <span id="mobile-nav-toggle"><?php $this->echo_svg( 'menu' ); ?></span><span id="header-nav" class="alignright"><?php require_once dirname(__FILE__).'/admin-buttons.php'; ?></span></h1>
 	<div class="inner">
 		<nav class="sub-menu">
 			<li><a data-target="content-mask-pages" href="#" class="<?php echo ( !isset( $_GET['tab'] ) ) ? 'active' : ''; ?>"><span>List View</span></a></li>
@@ -121,7 +121,7 @@
 							<input type="checkbox" name="content_mask_<?php echo $option->name; ?>" id="content_mask_<?php echo $option->name; ?>" <?php echo ${$option->name.'_checked'}; ?> />
 							<span class="content-mask-check">
 								<span class="content-mask-check_ajax">
-									<?php echo $this->display_svg( 'checkmark', 'icon' ); ?>
+									<?php $this->echo_svg( 'checkmark', 'icon' ); ?>
 								</span>
 							</span>
 						</label>
@@ -172,7 +172,7 @@
 										<input type="checkbox" name="content_mask_allow_<?php echo $type->name.'_'.$method; ?>" id="content_mask_allow_<?php echo $type->name.'_'.$method; ?>" <?php echo ${'allow_'.$type->name.'_'.$method.'_checked'}; ?> />
 										<span class="content-mask-check">
 											<span class="content-mask-check_ajax">
-												<?php echo $this->display_svg( 'checkmark', 'icon' ); ?>
+												<?php $this->echo_svg( 'checkmark', 'icon' ); ?>
 											</span>
 										</span>
 									</label>

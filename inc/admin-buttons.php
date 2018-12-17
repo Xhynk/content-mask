@@ -4,7 +4,7 @@
 			'classes'    => 'button-secondary alignright svg-icon-button',
 			'attr'       => 'target="_blank"',
 			'href'       => 'https://www.paypal.me/xhynk/',
-			'text'       => $this->display_svg( 'heart', 'icon' ).' Donate',
+			'text'       => $this->get_svg( 'heart', 'icon' ).' Donate',
 			'echo'       => true,
 			'avoid_keys' => ['irdr','trey','river','fahn']
 		),
@@ -12,7 +12,7 @@
 			'classes'    => 'button-secondary alignright svg-icon-button',
 			'attr'       => 'target="_blank"',
 			'href'       => 'https://wordpress.org/support/plugin/content-mask',
-			'text'       => $this->display_svg( 'help-circle', 'icon' ).' Help',
+			'text'       => $this->get_svg( 'help-circle', 'icon' ).' Help',
 			'echo'       => true,
 			'avoid_keys' => []
 		),
@@ -20,7 +20,7 @@
 			'classes'    => 'button-secondary alignright svg-icon-button',
 			'attr'       => 'target="_blank"',
 			'href'       => 'https://xhynk.com/content-mask/',
-			'text'       => $this->display_svg( 'bookmark', 'icon' ).' Docs',
+			'text'       => $this->get_svg( 'bookmark', 'icon' ).' Docs',
 			'echo'       => true,
 			'avoid_keys' => []
 		),
@@ -28,7 +28,7 @@
 			'classes'    => 'button-secondary alignright svg-icon-button',
 			'attr'       => 'target="_blank"',
 			'href'       => 'mailto:info@xhynk.com?subject="Content Mask Feature Request"',
-			'text'       => $this->display_svg( 'box', 'icon' ).' Feature Request',
+			'text'       => $this->get_svg( 'box', 'icon' ).' Feature Request',
 			'echo'       => true,
 			'avoid_keys' => []
 		),
@@ -36,7 +36,7 @@
 			'classes'    => 'button-secondary alignright svg-icon-button',
 			'attr'       => 'target="_blank"',
 			'href'       => 'https://xhynk.com/#footer',
-			'text'       => $this->display_svg( 'email', 'icon' ).' Contact',
+			'text'       => $this->get_svg( 'email', 'icon' ).' Contact',
 			'echo'       => true,
 			'avoid_keys' => []
 		)
