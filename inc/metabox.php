@@ -19,7 +19,7 @@
 			<?php foreach( ['download', 'iframe', 'redirect'] as $method ){ ?>
 				<label class="option">
 					<input type="radio" <?php echo $this->issetor( $content_mask_method ) == $method ? 'checked="checked"' : '' ?> value="<?php echo $method; ?>" name="content_mask_method">
-					<span class="title"><?php $this->echo_svg( $method ) . ucwords( $method ); ?></span>
+					<span class="title"><?php echo $this->get_svg( "method-{$method}" ) . ucwords( $method ); ?></span>
 				</label>
 			<?php } ?>
 		</div>

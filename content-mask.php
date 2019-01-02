@@ -3,7 +3,7 @@
  * Plugin Name: Content Mask
  * Plugin URI:  http://xhynk.com/content-mask/
  * Description: Easily embed external content into your website without complicated Domain Forwarders, Domain Masks, APIs or Scripts
- * Version:     1.7.0.5
+ * Version:     1.7.0.7
  * Author:      Alex Demchak
  * Author URI:  http://xhynk.com/
  *
@@ -1222,7 +1222,7 @@ class ContentMask {
 	public function content_mask_column_content( $column, $post_id ){
 		switch( $column ){
 			case 'content-mask':
-				extract( $this->get_post_fields( get_the_ID() ) );
+				extract( $this->get_post_fields( $post_id ) );
 				$enabled = !empty( $content_mask_enable ) ? 'enabled' : 'disabled';
 				
 				/**
@@ -1230,7 +1230,7 @@ class ContentMask {
 				 */
 				if( $content_mask_url ){
 					echo "<div class='content-mask-method $enabled' data-attr-state='$enabled'><div>";
-						$this->get_svg( "method-$content_mask_method", 'icon', 'title="'. ucwords( $content_mask_method ) .'"', true );
+						$this->echo_svg( "method-$content_mask_method", 'icon', 'title="'. ucwords( $content_mask_method ) .'"' );
 					echo '</div></div>';
 				}
 				

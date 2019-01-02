@@ -726,7 +726,8 @@ body.content-mask-admin div.content-mask-reloading:after {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  max-width: 80%; }
+  max-width: 80%;
+  z-index: 99999; }
 
 .content-mask-message-content {
   background: #0095ee;
