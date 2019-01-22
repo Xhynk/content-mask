@@ -4,7 +4,7 @@ Donate Link: https://www.paypal.me/xhynk/
 Tags: Embed, Domain Mask, Mask, Redirect, Link
 Requires at Least: 4.1
 Tested Up To: 5.0.2
-Stable tag: 1.7.0.7
+Stable tag: 1.7.0.8
 Requires PHP: 5.4
 Author URI: https://xhynk.com/
 Plugin URL: https://xhynk.com/content-mask/
@@ -128,6 +128,9 @@ If your website is secured (with https://), make sure any links on the iframed p
 4. The same WordPress page with Content Mask enabled and set to https://example.com/. You can see the URL has remained the same but the content has been entirely replaced (on the front end only) by the content from https://example.com/
 
 == Changelog ==
+= 1.7.0.8 =
+* Fixed a bug with transient versions on the front end *
+
 = 1.7.0.6 =
 * Fixed a bug with SVG functions
 
